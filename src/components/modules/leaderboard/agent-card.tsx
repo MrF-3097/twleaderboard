@@ -1,0 +1,230 @@
+'use client'
+
+import { motion } from 'framer-motion'
+import { TrendingUp, TrendingDown, Trophy, Award } from 'lucide-react'
+import { useThemeContext } from '@/contexts/theme-context'
+import type { Agent } from '@/types'
+
+interface AgentCardProps {
+  agent: Agent
+  index: number
+  onClick: () => void
+  rankChange?: 'up' | 'down' | 'same'
+  scale?: number
+}
+
+const getRankIcon = (rank: number, scale: number = 1, isDarkMode: boolean) => {
+  const size = 40 * scale
+  const fontSize = 36 * scale
+  const textColor = isDarkMode ? 'text-white/70' : 'text-slate-600'
+  switch (rank) {
+    case 1:
+      return <Trophy className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" style={{ width: `${size}px`, height: `${size}px` }} />
+    case 2:
+      return <Award className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" style={{ width: `${size}px`, height: `${size}px` }} />
+    case 3:
+      return <Award className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" style={{ width: `${size}px`, height: `${size}px` }} />
+    default:
+      return <span className={`font-bold ${textColor}`} style={{ fontSize: `${fontSize}px` }}>#{rank}</span>
+  }
+}
+
+const getRankBackground = (rank: number, isDarkMode: boolean) => {
+  switch (rank) {
+    case 1:
+      // Gold gradient background
+      return 'bg-gradient-to-br from-[#FFD700] via-[#FFA500] to-[#FF8C00] border-[#FFD700]/80'
+    case 2:
+      // Silver gradient background
+      return 'bg-gradient-to-br from-[#E8E8E8] via-[#C0C0C0] to-[#A8A8A8] border-[#C0C0C0]/80'
+    case 3:
+      // Bronze gradient background
+      return 'bg-gradient-to-br from-[#CD7F32] via-[#B87333] to-[#8B4513] border-[#CD7F32]/80'
+    default:
+      return isDarkMode 
+        ? 'bg-transparent border-white/20' 
+        : 'bg-white/80 border-slate-300'
+  }
+}
+
+export const AgentCard: React.FC<AgentCardProps> = ({ agent, index, onClick, rankChange, scale = 1 }) => {
+  const { isDarkMode } = useThemeContext()
+  const rank = agent.rank || index + 1
+  const isTopThree = rank <= 3
+  
+  // Calculate sizes based on scale with minimums for readability
+  const avatarSize = Math.max(36, 80 * scale) // Minimum 36px for visibility
+  const rankIconSize = Math.max(32, 80 * scale) // Minimum 32px for visibility
+  const rankChangeIconSize = Math.max(20, 32 * scale) // Minimum 20px
+  
+  const textColor = isDarkMode ? 'text-white' : 'text-slate-900'
+  const textColorMuted = isDarkMode ? 'text-white/70' : 'text-slate-600'
+  const borderColor = isDarkMode ? 'border-white/20' : 'border-slate-300'
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.5, type: 'spring', stiffness: 100 }}
+      whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+      onClick={onClick}
+      className="flex-shrink-0"
+    >
+      <div
+        className={`relative overflow-hidden cursor-pointer transition-all duration-300 ${getRankBackground(
+          rank, isDarkMode
+        )} ${isDarkMode ? 'hover:border-white/30' : 'hover:border-slate-400'} rounded-2xl border`}
+      >
+        {/* Metal background for top 3 */}
+        {isTopThree && (
+          <>
+            {/* Base metal gradient */}
+            <div className="absolute inset-0 opacity-95" />
+            
+            {/* White shine/highlight effect for metallic look */}
+            <div 
+              className="absolute inset-0 opacity-60"
+              style={{
+                background: rank === 1 
+                  ? 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 30%, transparent 60%, rgba(255,255,255,0.2) 100%)'
+                  : rank === 2
+                  ? 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 30%, transparent 60%, rgba(255,255,255,0.3) 100%)'
+                  : 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 30%, transparent 60%, rgba(255,255,255,0.2) 100%)'
+              }}
+            />
+            
+            {/* Additional shine overlay for depth */}
+            <div 
+              className="absolute top-0 left-0 right-0 h-1/3 opacity-40"
+              style={{
+                background: 'linear-gradient(to bottom, rgba(255,255,255,0.6), transparent)'
+              }}
+            />
+          </>
+        )}
+        
+        {/* Background pattern for non-top-3 */}
+        {!isTopThree && (
+          <div className={`absolute inset-0 ${isDarkMode ? 'bg-[radial-gradient(circle_at_top_right,rgba(71,85,105,0.1),transparent_50%)]' : 'bg-[radial-gradient(circle_at_top_right,rgba(148,163,184,0.1),transparent_50%)]'}`} />
+        )}
+        
+        {/* Rank change indicator */}
+        {rankChange && rankChange !== 'same' && (
+          <motion.div
+            className={`absolute z-20 ${
+              rankChange === 'up' ? (isTopThree ? 'text-green-600' : 'text-green-400') : (isTopThree ? 'text-red-600' : 'text-red-400')
+            }`}
+            style={{ top: `${16 * scale}px`, right: `${16 * scale}px` }}
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 200 }}
+          >
+            {rankChange === 'up' ? (
+              <TrendingUp style={{ width: `${rankChangeIconSize}px`, height: `${rankChangeIconSize}px` }} />
+            ) : (
+              <TrendingDown style={{ width: `${rankChangeIconSize}px`, height: `${rankChangeIconSize}px` }} />
+            )}
+          </motion.div>
+        )}
+
+        <div className="relative z-20" style={{ padding: `${18 * scale}px` }}>
+          <div className="flex items-center" style={{ gap: `${20 * scale}px` }}>
+            {/* Rank Badge */}
+            <div className="flex-shrink-0 flex items-center justify-center" style={{ width: `${rankIconSize}px`, height: `${rankIconSize}px` }}>
+              {getRankIcon(rank, scale, isDarkMode)}
+            </div>
+
+            {/* Avatar */}
+            <div className="flex-shrink-0">
+              <div className="relative">
+                <div
+                  className={`rounded-full overflow-hidden ${
+                    isTopThree ? 'border-white shadow-lg shadow-white/50' : 'border-white/20'
+                  }`}
+                  style={{ 
+                    width: `${avatarSize}px`, 
+                    height: `${avatarSize}px`,
+                    borderWidth: `${3 * scale}px`,
+                    minWidth: `${36}px`, // Minimum avatar size for visibility
+                    minHeight: `${36}px`
+                  }}
+                >
+                  {agent.avatar || agent.profile_picture ? (
+                    <img
+                      src={agent.avatar || agent.profile_picture}
+                      alt={agent.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div 
+                      className="w-full h-full bg-[#203A53] flex items-center justify-center text-white font-bold"
+                      style={{ fontSize: `${Math.max(18, 24 * scale)}px` }}
+                    >
+                      {agent.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Agent Info */}
+            <div className="flex-1 min-w-0">
+              <h3 
+                className={`font-bold truncate ${
+                  isTopThree 
+                    ? 'text-slate-900 drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]' 
+                    : textColor
+                }`}
+                style={{ fontSize: `${Math.max(21, 36 * scale)}px` }}
+              >
+                {agent.name}
+              </h3>
+            </div>
+
+            {/* Stats */}
+            <div className="flex-shrink-0 text-right flex items-baseline" style={{ gap: '33px' }}>
+              <div 
+                className={`font-bold ${
+                  isTopThree 
+                    ? 'text-slate-900 drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]' 
+                    : textColor
+                }`}
+                style={{ fontSize: `${Math.max(32, 48 * scale)}px` }}
+              >
+                €{(agent.total_commission || agent.xp || 0).toLocaleString('ro-RO')} comision
+              </div>
+              <div 
+                className={isTopThree ? 'text-slate-800' : textColorMuted}
+                style={{ fontSize: `${Math.max(18, 27 * scale)}px` }}
+              >
+                {agent.closed_transactions || 0} tranzacții
+              </div>
+            </div>
+          </div>
+
+          {/* Badges */}
+          {agent.badges && agent.badges.length > 0 && (
+            <div className="mt-3 flex gap-1 flex-wrap">
+              {agent.badges.slice(0, 3).map((badge, i) => (
+                <span
+                  key={i}
+                  className={`text-xs px-2 py-1 rounded-full ${
+                    rank === 1 ? 'bg-[#FFD700]/30 text-slate-900' :
+                    rank === 2 ? 'bg-[#C0C0C0]/30 text-slate-900' :
+                    rank === 3 ? 'bg-[#CD7F32]/30 text-slate-900' :
+                    'bg-[#FFD700]/20 text-[#FFD700]'
+                  }`}
+                >
+                  {badge}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+

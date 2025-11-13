@@ -1,0 +1,263 @@
+'use client'
+
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Trophy, RefreshCcw } from 'lucide-react'
+import { useAgentLeaderboard } from '@/hooks/use-agent-leaderboard'
+import { AgentCard } from './agent-card'
+import { AgentDetailModal } from './agent-detail-modal'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { playSound } from '@/lib/sounds'
+import { useThemeContext } from '@/contexts/theme-context'
+import type { Agent } from '@/types'
+
+const POLLING_INTERVAL = 5000 // 5 seconds - matches external API cache duration
+const MAX_AGENTS = 20
+const SCREEN_HEIGHT = 1080
+const MARGIN_TOP_PERCENT = 3 // 3% margin top
+const MARGIN_BOTTOM_PERCENT = 0 // No bottom margin (using negative margin from page)
+const HEADER_HEIGHT = 120 // Header + title + padding (description removed)
+const CARD_GAP = 3 // Gap between cards (smaller for more agents)
+const SIZE_MULTIPLIER = 1.1 // 10% size increase
+
+/**
+ * Calculate dynamic scaling factor based on number of agents
+ * Ensures all agents fit on screen (1080px height)
+ * 
+ * Base card structure (at scale 1.0):
+ * - Padding: 18px top + 18px bottom = 36px
+ * - Content row (avatar, name, stats): ~90px
+ * - Total: ~126px per card at scale 1.0 (optimized for readability)
+ */
+const calculateScaling = (agentCount: number): number => {
+  if (agentCount === 0) return 1
+  
+  // Calculate available height with 3% margins top and bottom
+  const marginTop = SCREEN_HEIGHT * (MARGIN_TOP_PERCENT / 100)
+  const marginBottom = SCREEN_HEIGHT * (MARGIN_BOTTOM_PERCENT / 100)
+  const availableHeight = SCREEN_HEIGHT - marginTop - marginBottom - HEADER_HEIGHT
+  
+  // Total gaps between cards
+  const totalGaps = Math.max(0, (agentCount - 1) * CARD_GAP)
+  
+  // Available height for actual card content
+  const availableForCards = availableHeight - totalGaps
+  
+  // Base card height at scale 1.0
+  // Optimized: padding (36px) + content row (90px) = 126px
+  const baseCardHeight = 126
+  
+  // Calculate maximum card height that fits
+  const maxCardHeight = availableForCards / agentCount
+  
+  // Calculate scale factor (how much to scale down from base)
+  // This ensures all cards fit on screen
+  let scale = maxCardHeight / baseCardHeight
+  
+  // Minimum scale for readability (0.5 = 50% of original size)
+  // Increased to ensure names and images remain clearly visible
+  // At 0.5 scale: names ~12px, avatars ~40px - readable on TV
+  const minReadableScale = 0.5
+  
+  // If calculated scale is below minimum readable scale, we have a problem
+  // In this case, we need to reduce spacing/padding to fit
+  if (scale < minReadableScale) {
+    // Try reducing base card height by reducing padding
+    const reducedBaseHeight = 110 // Less padding
+    const reducedScale = maxCardHeight / reducedBaseHeight
+    
+    // Use the better of the two, but never below readability minimum
+    scale = Math.max(minReadableScale, reducedScale)
+  } else {
+    // Use calculated scale, but ensure it's at least the minimum
+    scale = Math.max(minReadableScale, scale)
+  }
+  
+  // Clamp to maximum of 1.1 (allow 10% larger than base)
+  scale = Math.min(1.1, scale)
+  
+  // Apply size multiplier for overall increase
+  return scale * SIZE_MULTIPLIER
+}
+
+const TOP_PAUSE_DURATION = 120000 // 2 minutes at top
+const BOTTOM_PAUSE_DURATION = 5000 // 5 seconds at bottom
+const SCROLL_SPEED = 30 // pixels per second
+const AGENTS_VISIBLE = 10 // Number of agents visible at once
+
+export const GamifiedLeaderboard: React.FC = () => {
+  const { isDarkMode } = useThemeContext()
+  const { agents, isLoading, error, rankChanges, refetch } = useAgentLeaderboard(POLLING_INTERVAL)
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const previousRankChangesRef = useRef<typeof rankChanges>([])
+  
+  // Calculate dynamic scaling based on visible agents (always 10)
+  const scale = useMemo(() => calculateScaling(AGENTS_VISIBLE), [])
+  
+  const textColor = isDarkMode ? 'text-white' : 'text-slate-900'
+  const textColorMuted = isDarkMode ? 'text-white/70' : 'text-slate-600'
+  const borderColor = isDarkMode ? 'border-white/20' : 'border-slate-300'
+  const bgColor = isDarkMode ? 'bg-transparent' : 'bg-white/50'
+  
+
+  // Play sounds when rank changes occur
+  useEffect(() => {
+    // Only play sounds if there are new rank changes
+    if (rankChanges.length === 0) {
+      previousRankChangesRef.current = []
+      return
+    }
+
+    // Compare with previous changes to find new ones
+    const previousChangeMap = new Map(
+      previousRankChangesRef.current.map(c => [`${c.agentId}-${c.oldRank}-${c.newRank}`, c])
+    )
+    
+    const newChanges = rankChanges.filter(change => {
+      const key = `${change.agentId}-${change.oldRank}-${change.newRank}`
+      return !previousChangeMap.has(key)
+    })
+
+    // Play sounds for each new rank change
+    newChanges.forEach((change) => {
+      if (change.type === 'up') {
+        // Small delay to ensure sounds don't overlap too much
+        setTimeout(() => playSound('rank_up'), 0)
+      } else if (change.type === 'down') {
+        setTimeout(() => playSound('rank_down'), 50)
+      }
+    })
+    
+    // Update previous changes
+    previousRankChangesRef.current = rankChanges
+  }, [rankChanges])
+
+  const handleAgentClick = (agent: Agent) => {
+    setSelectedAgent(agent)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false)
+    // Clear selected agent after animation completes
+    setTimeout(() => {
+      setSelectedAgent(null)
+    }, 300)
+  }, [])
+
+  const handleRefresh = () => {
+    refetch()
+  }
+
+  if (error && agents.length === 0) {
+    return (
+      <div className={`relative overflow-hidden rounded-2xl ${isDarkMode ? 'bg-transparent' : 'bg-white/50'} border border-red-500/50`}>
+        <div className="relative z-10 p-6">
+          <div className="text-center py-8">
+            <p className="text-red-400 font-medium text-lg">Eroare la încărcarea clasamentului</p>
+            <p className={`text-sm ${textColorMuted} mt-2 max-w-md mx-auto`}>{error}</p>
+            <div className="mt-4 space-y-2">
+              <Button onClick={handleRefresh} className={`bg-transparent ${isDarkMode ? 'hover:bg-white/10 text-white border-white/20' : 'hover:bg-slate-100 text-slate-900 border-slate-300'}`}>
+                <RefreshCcw className="h-4 w-4 mr-2" />
+                Încearcă din nou
+              </Button>
+              <p className={`text-xs ${textColorMuted} mt-4`}>
+                  Dacă problema persistă, verificați că serverul API rulează și este accesibil.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4 md:space-y-6">
+      {/* Error Banner - Show when error but we have cached data */}
+      {error && agents.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-2xl bg-yellow-500/10 border border-yellow-500/50"
+        >
+          <div className="relative z-10 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <RefreshCcw className="h-4 w-4 text-yellow-400 animate-spin" />
+                <p className="text-yellow-400 text-sm font-medium">
+                  Problemă de conexiune - se afișează date din cache
+                </p>
+              </div>
+              <Button
+                onClick={handleRefresh}
+                size="sm"
+                className="bg-transparent hover:bg-yellow-500/20 text-yellow-400 border-yellow-500/50"
+              >
+                Reîncearcă
+              </Button>
+            </div>
+            <p className="text-xs text-yellow-400/70 mt-1">{error}</p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Leaderboard */}
+      <div className={`relative overflow-hidden rounded-2xl ${bgColor} border ${borderColor} flex-1 flex flex-col min-h-0`}>
+        <div className="relative z-10 flex flex-col min-h-0">
+          <CardHeader className="pb-4 flex-shrink-0" style={{ paddingBottom: `${16 * scale}px` }}>
+            <CardTitle 
+              className={`flex items-center gap-3 ${textColor}`}
+              style={{ fontSize: `${30 * scale}px` }}
+            >
+              <Trophy className="text-[#FFD700]" style={{ width: `${32 * scale}px`, height: `${32 * scale}px` }} />
+              Clasament Agenți
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 min-h-0 overflow-hidden">
+            {isLoading && agents.length === 0 ? (
+              <div className="text-center py-16">
+                <RefreshCcw className={`h-16 w-16 mx-auto mb-6 animate-spin ${isDarkMode ? 'text-white/50' : 'text-slate-400'}`} />
+                <p className={`text-xl ${textColorMuted}`}>Se încarcă clasamentul...</p>
+              </div>
+            ) : agents.length === 0 ? (
+              <div className={`text-center py-16 ${textColorMuted}`}>
+                <Trophy className="h-16 w-16 mx-auto mb-6 opacity-50" />
+                <p className="text-xl">Nu s-au găsit agenți</p>
+              </div>
+            ) : (
+              <div 
+                style={{ gap: `${CARD_GAP * scale}px` }} 
+                className="flex flex-col h-full overflow-hidden"
+              >
+                {agents.slice(0, 10).map((agent, index) => {
+                  const rankChange = rankChanges.find((rc) => rc.agentId === agent.id)
+                  
+                  return (
+                    <AgentCard
+                      key={agent.id}
+                      agent={agent}
+                      index={index}
+                      onClick={() => handleAgentClick(agent)}
+                      rankChange={rankChange?.type}
+                      scale={scale}
+                    />
+                  )
+                })}
+              </div>
+            )}
+          </CardContent>
+        </div>
+      </div>
+
+      {/* Agent Detail Modal */}
+      <AgentDetailModal
+        agent={selectedAgent}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
+    </div>
+  )
+}
+
