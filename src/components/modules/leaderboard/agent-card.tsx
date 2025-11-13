@@ -100,10 +100,7 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
           rank, isDarkMode
         )} ${isTV ? '' : (isDarkMode ? 'hover:border-white/30' : 'hover-border-slate-400')} ${rank <= 3 ? 'rounded-2xl' : 'rounded-none'} border`}
         style={{
-          ...(rank === 1 && { marginBottom: `${15 * scale}px` }),
-          ...(rank === 2 && { marginTop: `${15 * scale}px`, marginBottom: `${15 * scale}px` }),
-          ...(rank === 3 && { marginTop: `${15 * scale}px` }),
-          ...(rank === 4 && { marginTop: `${15 * scale}px` }),
+          ...(rank >= 2 && rank <= 4 && { marginTop: `${15 * scale}px` }),
           ...(isFourthOrBelow && {
             borderLeftWidth: 0,
             borderRightWidth: 0,
