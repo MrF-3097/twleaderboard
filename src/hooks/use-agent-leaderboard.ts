@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import type { Agent, AgentStats, LeaderboardRankChange } from '@/types'
 import { useLeaderboardStream } from './use-leaderboard-stream'
 import type { ExternalAgent, ExternalStats } from '@/types/external-api'
@@ -226,8 +226,20 @@ export const useAgentLeaderboard = (
   }, [])
 
   /**
+   * Memoize mapped agents to prevent unnecessary recalculations
+   * Only remap when external agents or REBS agents change
+   */
+  const mappedAgents = useMemo(() => {
+    if (externalAgents.length === 0) return []
+    return externalAgents.map(agent => 
+      mapExternalAgentToAgent(agent, findRebsAgent)
+    )
+  }, [externalAgents, findRebsAgent])
+
+  /**
    * Process external API data and update state
    * Enriches with REBS CRM avatars when available
+   * Optimized for instant updates on TV
    */
   useEffect(() => {
     if (externalAgents.length === 0 && !isLoading) {
@@ -237,22 +249,17 @@ export const useAgentLeaderboard = (
       return
     }
 
-    // Map external agents to internal Agent type, enriching with REBS data
-    const mappedAgents = externalAgents.map(agent => 
-      mapExternalAgentToAgent(agent, findRebsAgent)
-    )
-
-    // Detect rank changes
+    // Detect rank changes immediately (using memoized agents)
     if (previousAgentsRef.current.length > 0) {
       const changes = detectRankChanges(previousAgentsRef.current, mappedAgents)
       if (changes.length > 0) {
         setRankChanges(changes)
-        // Clear rank changes after 5 seconds
-        setTimeout(() => setRankChanges([]), 5000)
+        // Clear rank changes after 3 seconds (reduced for faster updates)
+        setTimeout(() => setRankChanges([]), 3000)
       }
     }
 
-    // Update state
+    // Immediate state updates - batch together for optimal performance
     previousAgentsRef.current = mappedAgents
     setAgents(mappedAgents)
     
@@ -260,7 +267,7 @@ export const useAgentLeaderboard = (
     if (externalStats) {
       setStats(mapExternalStatsToStats(externalStats, mappedAgents, findRebsAgent))
     }
-  }, [externalAgents, externalStats, isLoading, detectRankChanges, findRebsAgent, rebsAgentsLoaded])
+  }, [mappedAgents, externalStats, isLoading, detectRankChanges, findRebsAgent])
 
   /**
    * Manual refetch function

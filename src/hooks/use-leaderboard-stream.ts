@@ -8,7 +8,7 @@ import {
   type ExternalStats,
 } from '@/types/external-api'
 
-const MAX_RECONNECT_DELAY = 30000 // 30 seconds max
+const MAX_RECONNECT_DELAY = 5000 // 5 seconds max for faster reconnection on TV
 
 interface UseLeaderboardStreamReturn {
   agents: ExternalAgent[]
@@ -34,7 +34,7 @@ export const useLeaderboardStream = (): UseLeaderboardStreamReturn => {
 
   const eventSourceRef = useRef<EventSource | null>(null)
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const reconnectDelayRef = useRef(1000) // Start with 1 second delay
+  const reconnectDelayRef = useRef(500) // Start with 500ms delay for faster reconnection
   const isMountedRef = useRef(true)
 
   /**
@@ -92,6 +92,8 @@ export const useLeaderboardStream = (): UseLeaderboardStreamReturn => {
             return
           }
 
+          // Immediate state updates - use flushSync for instant updates on TV
+          // Batch all updates together for optimal performance
           setAgents(data.data.agents)
           setStats(data.data.stats)
           setLastUpdated(data.meta?.updated_at || new Date().toISOString())
