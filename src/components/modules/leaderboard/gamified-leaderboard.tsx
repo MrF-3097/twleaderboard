@@ -234,15 +234,6 @@ export const GamifiedLeaderboard: React.FC = () => {
       {/* Leaderboard */}
       <div className={`relative overflow-hidden rounded-2xl ${bgColor} border ${borderColor} flex-1 flex flex-col min-h-0`}>
         <div className="relative z-10 flex flex-col min-h-0">
-          <CardHeader className="pb-4 flex-shrink-0" style={{ paddingBottom: `${16 * scale}px` }}>
-            <CardTitle 
-              className={`flex items-center gap-3 ${textColor}`}
-              style={{ fontSize: `${30 * scale}px` }}
-            >
-              <Trophy className="text-[#FFD700]" style={{ width: `${32 * scale}px`, height: `${32 * scale}px` }} />
-              Clasament Agenți
-            </CardTitle>
-          </CardHeader>
           <CardContent className="flex-1 min-h-0 overflow-hidden">
             {isLoading && agents.length === 0 ? (
               <div className="text-center py-16">

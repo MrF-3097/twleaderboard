@@ -223,7 +223,7 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
                     ? 'text-slate-900 drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]' 
                     : textColor
                 }`}
-                style={{ fontSize: `${Math.max(26.56, 39.84 * scale)}px` }}
+                style={{ fontSize: `${Math.max(35.5904, 53.2816 * scale)}px` }}
               >
                 €{(agent.total_commission || agent.xp || 0).toLocaleString('ro-RO')}
               </div>
