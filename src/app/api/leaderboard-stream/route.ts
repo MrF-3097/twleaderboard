@@ -23,6 +23,8 @@ export async function GET(request: NextRequest) {
       let lastData: string | null = null
       let pollInterval: NodeJS.Timeout | null = null
       let isActive = true
+      let keepAliveInterval: NodeJS.Timeout | null = null
+      const origin = request.nextUrl.origin
 
       // Send initial connection message
       const sendMessage = (data: string, event: string = 'message') => {
@@ -32,11 +34,25 @@ export async function GET(request: NextRequest) {
           controller.enqueue(encoder.encode(message))
         } catch (error) {
           console.error('[SSE] Error sending message:', error)
+          isActive = false
+          if (pollInterval) {
+            clearInterval(pollInterval)
+            pollInterval = null
+          }
+          if (keepAliveInterval) {
+            clearInterval(keepAliveInterval)
+            keepAliveInterval = null
+          }
+          try {
+            controller.close()
+          } catch {
+            // ignore
+          }
         }
       }
 
       // Send keepalive ping every 15 seconds (more frequent for TV)
-      const keepAliveInterval = setInterval(() => {
+      keepAliveInterval = setInterval(() => {
         if (isActive) {
           sendMessage('ping', 'ping')
         }
@@ -47,9 +63,7 @@ export async function GET(request: NextRequest) {
         if (!isActive) return
 
         try {
-          const headers: HeadersInit = {
-            'Content-Type': 'application/json',
-          }
+          const headers: HeadersInit = {}
 
           if (lastETag) {
             headers['If-None-Match'] = lastETag
@@ -61,8 +75,8 @@ export async function GET(request: NextRequest) {
 
           let response: Response
           try {
-            // Fetch directly from external API (same as proxy route logic)
-            response = await fetch(EXTERNAL_API_URL, {
+            const proxyUrl = new URL(PROXY_API_URL, origin).toString()
+            response = await fetch(proxyUrl, {
               method: 'GET',
               headers,
               cache: 'no-store',
@@ -72,10 +86,29 @@ export async function GET(request: NextRequest) {
           } catch (fetchError) {
             clearTimeout(timeoutId)
             if (fetchError instanceof Error && fetchError.name === 'AbortError') {
-              console.error('[SSE] Request timeout')
-              return // Don't send error, just skip this poll
+              console.error('[SSE] Request timeout (proxy)')
+              return // Skip this poll
             }
-            throw fetchError
+            console.warn('[SSE] Proxy fetch failed, falling back to external API:', fetchError)
+
+            const fallbackController = new AbortController()
+            const fallbackTimeout = setTimeout(() => fallbackController.abort(), 8000)
+            try {
+              response = await fetch(EXTERNAL_API_URL, {
+                method: 'GET',
+                headers,
+                cache: 'no-store',
+                signal: fallbackController.signal,
+              })
+              clearTimeout(fallbackTimeout)
+            } catch (fallbackError) {
+              clearTimeout(fallbackTimeout)
+              if (fallbackError instanceof Error && fallbackError.name === 'AbortError') {
+                console.error('[SSE] Request timeout (fallback)')
+                return
+              }
+              throw fallbackError
+            }
           }
 
           // Handle non-OK responses
@@ -191,8 +224,15 @@ export async function GET(request: NextRequest) {
         if (pollInterval) {
           clearInterval(pollInterval)
         }
-        clearInterval(keepAliveInterval)
-        controller.close()
+        if (keepAliveInterval) {
+          clearInterval(keepAliveInterval)
+          keepAliveInterval = null
+        }
+        try {
+          controller.close()
+        } catch {
+          // ignore
+        }
       })
     },
   })
