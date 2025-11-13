@@ -209,7 +209,7 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
                     ? 'text-slate-900 drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]' 
                     : textColor
                 }`}
-                style={{ fontSize: `${Math.max(21, 36 * scale)}px` }}
+                style={{ fontSize: `${Math.max(31.5, 54 * scale)}px`, lineHeight: '1.05' }}
               >
                 {agent.name}
               </h3>
