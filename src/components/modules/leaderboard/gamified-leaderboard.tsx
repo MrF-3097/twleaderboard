@@ -14,7 +14,7 @@ import type { Agent } from '@/types'
 
 const POLLING_INTERVAL = 5000 // 5 seconds - matches external API cache duration
 const MAX_AGENTS = 20
-const SCREEN_HEIGHT = 1080
+const DEFAULT_SCREEN_HEIGHT = 1080 // Fallback if window is not available
 const MARGIN_TOP_PERCENT = 3 // 3% margin top
 const MARGIN_BOTTOM_PERCENT = 0 // No bottom margin (using negative margin from page)
 const HEADER_HEIGHT = 120 // Header + title + padding (description removed)
@@ -23,20 +23,20 @@ const SIZE_MULTIPLIER = 1.1 // 10% size increase
 
 /**
  * Calculate dynamic scaling factor based on number of agents
- * Ensures all agents fit on screen (1080px height)
+ * Ensures all agents fit on screen using actual viewport height
  * 
  * Base card structure (at scale 1.0):
  * - Padding: 18px top + 18px bottom = 36px
  * - Content row (avatar, name, stats): ~90px
  * - Total: ~126px per card at scale 1.0 (optimized for readability)
  */
-const calculateScaling = (agentCount: number): number => {
+const calculateScaling = (agentCount: number, actualScreenHeight: number = DEFAULT_SCREEN_HEIGHT): number => {
   if (agentCount === 0) return 1
   
   // Calculate available height with 3% margins top and bottom
-  const marginTop = SCREEN_HEIGHT * (MARGIN_TOP_PERCENT / 100)
-  const marginBottom = SCREEN_HEIGHT * (MARGIN_BOTTOM_PERCENT / 100)
-  const availableHeight = SCREEN_HEIGHT - marginTop - marginBottom - HEADER_HEIGHT
+  const marginTop = actualScreenHeight * (MARGIN_TOP_PERCENT / 100)
+  const marginBottom = actualScreenHeight * (MARGIN_BOTTOM_PERCENT / 100)
+  const availableHeight = actualScreenHeight - marginTop - marginBottom - HEADER_HEIGHT
   
   // Total gaps between cards
   const totalGaps = Math.max(0, (agentCount - 1) * CARD_GAP)
@@ -92,9 +92,24 @@ export const GamifiedLeaderboard: React.FC = () => {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const previousRankChangesRef = useRef<typeof rankChanges>([])
+  const [viewportHeight, setViewportHeight] = useState(DEFAULT_SCREEN_HEIGHT)
   
-  // Calculate dynamic scaling based on visible agents (always 10)
-  const scale = useMemo(() => calculateScaling(AGENTS_VISIBLE), [])
+  // Get actual viewport height
+  useEffect(() => {
+    const updateViewportHeight = () => {
+      if (typeof window !== 'undefined') {
+        setViewportHeight(window.innerHeight)
+      }
+    }
+    
+    updateViewportHeight()
+    window.addEventListener('resize', updateViewportHeight)
+    
+    return () => window.removeEventListener('resize', updateViewportHeight)
+  }, [])
+  
+  // Calculate dynamic scaling based on visible agents (always 10) and actual viewport height
+  const scale = useMemo(() => calculateScaling(AGENTS_VISIBLE, viewportHeight), [viewportHeight])
   
   const textColor = isDarkMode ? 'text-white' : 'text-slate-900'
   const textColorMuted = isDarkMode ? 'text-white/70' : 'text-slate-600'
