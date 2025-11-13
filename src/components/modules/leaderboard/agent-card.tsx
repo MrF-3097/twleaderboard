@@ -193,7 +193,7 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
             </div>
 
             {/* Agent Info */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0" style={{ marginLeft: '75px' }}>
               <h3 
                 className={`font-bold truncate ${
                   isTopThree 
