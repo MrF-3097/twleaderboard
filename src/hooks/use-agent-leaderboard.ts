@@ -95,13 +95,12 @@ const getRebsFullName = (agent: RebsAgent): string => {
 
 const createFallbackAgentFromRebs = (agent: RebsAgent, fallbackIndex: number): Agent => {
   const baseName = getRebsFullName(agent) || `Agent necunoscut ${fallbackIndex + 1}`
-  const displayName = `${baseName} (fără tranzacții)`
   const normalizedName = baseName.toLowerCase().replace(/\s+/g, '-')
   const id = agent.id ? `rebs-${agent.id}` : `rebs-${normalizedName || fallbackIndex}`
 
   return {
     id,
-    name: displayName,
+    name: baseName,
     avatar: agent.avatar || agent.profile_picture || undefined,
     profile_picture: agent.profile_picture || agent.avatar || undefined,
     email: agent.email || undefined,
@@ -122,7 +121,7 @@ const createPlaceholderAgent = (index: number): Agent => {
   const placeholderName = `Agent necunoscut ${index}`
   return {
     id: `placeholder-${index}`,
-    name: `${placeholderName} (fără tranzacții)`,
+    name: placeholderName,
     rank: undefined,
     closed_transactions: 0,
     total_value: 0,

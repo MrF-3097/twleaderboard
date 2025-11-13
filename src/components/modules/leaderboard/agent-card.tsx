@@ -207,7 +207,7 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
             </div>
 
             {/* Stats */}
-            <div className="flex-shrink-0 text-right flex items-baseline" style={{ gap: '33px' }}>
+            <div className="flex-shrink-0 text-right flex items-baseline" style={{ paddingRight: '100px' }}>
               <div 
                 className={`font-bold ${
                   isTopThree 
@@ -216,13 +216,7 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
                 }`}
                 style={{ fontSize: `${Math.max(32, 48 * scale)}px` }}
               >
-                €{(agent.total_commission || agent.xp || 0).toLocaleString('ro-RO')} comision
-              </div>
-              <div 
-                className={isTopThree ? 'text-slate-800' : textColorMuted}
-                style={{ fontSize: `${Math.max(18, 27 * scale)}px` }}
-              >
-                {agent.closed_transactions || 0} tranzacții
+                €{(agent.total_commission || agent.xp || 0).toLocaleString('ro-RO')}
               </div>
             </div>
           </div>
