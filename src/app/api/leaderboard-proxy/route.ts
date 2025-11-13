@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
       ? `${EXTERNAL_API_URL}?${queryParams.toString()}`
       : EXTERNAL_API_URL
 
+    console.log('[Proxy] Fetching from:', apiUrl)
+
     // Get ETag from request headers
     const ifNoneMatch = request.headers.get('if-none-match')
 
@@ -49,6 +51,36 @@ export async function GET(request: NextRequest) {
     // Handle 304 Not Modified
     if (response.status === 304) {
       return new NextResponse(null, { status: 304 })
+    }
+
+    // Check if response is successful
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`[Proxy] API returned ${response.status}:`, errorText.substring(0, 500))
+      return NextResponse.json(
+        {
+          success: false,
+          error: `API returned ${response.status}: ${response.statusText}`,
+          message: 'External API error',
+        },
+        { status: response.status }
+      )
+    }
+
+    // Check content type before parsing
+    const contentType = response.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) {
+      const text = await response.text()
+      console.error('[Proxy] Non-JSON response received:', text.substring(0, 500))
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Expected JSON but received ${contentType}`,
+          message: 'Invalid response format from external API',
+          details: text.substring(0, 200),
+        },
+        { status: 502 }
+      )
     }
 
     // Get ETag from response

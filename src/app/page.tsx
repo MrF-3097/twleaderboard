@@ -1,7 +1,5 @@
 'use client'
 
-export const runtime = 'edge'
-
 import { GamifiedLeaderboard } from '@/components/modules/leaderboard/gamified-leaderboard'
 import { StatsOverview } from '@/components/modules/stats/stats-overview'
 import { useAgentLeaderboard } from '@/hooks/use-agent-leaderboard'
