@@ -42,8 +42,8 @@ const getRankBackground = (rank: number, isDarkMode: boolean) => {
       // Silver gradient background
       return 'bg-gradient-to-br from-[#E8E8E8] via-[#C0C0C0] to-[#A8A8A8] border-[#C0C0C0]/80'
     case 3:
-      // Matte bronze background (subtle, non-reflective)
-      return 'bg-[#917052] border-[#6F5339]'
+      // Matte bronze background (warm, subtle)
+      return 'bg-[#B27334] border-[#8C5523]'
     default:
       return isDarkMode 
         ? 'bg-transparent border-white/20' 
