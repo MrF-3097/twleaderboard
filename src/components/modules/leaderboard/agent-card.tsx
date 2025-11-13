@@ -105,6 +105,7 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
             borderLeftWidth: 0,
             borderRightWidth: 0,
           }),
+          ...(rank === 1 && { paddingTop: `${10 * scale}px` }),
         }}
       >
         {/* Metal background for top 3 */}
