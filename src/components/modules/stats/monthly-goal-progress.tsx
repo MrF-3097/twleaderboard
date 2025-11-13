@@ -23,7 +23,7 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
   // Calculate progress percentage (can exceed 100%)
   const progressPercentage = (totalCommission / MONTHLY_GOAL) * 100
   const progressWidth = Math.min(progressPercentage, 100)
-  const displayedWidth = progressWidth <= 0 ? 0 : progressWidth
+  const displayedWidth = progressWidth <= 0 ? 2 : progressWidth
   const remaining = Math.max(MONTHLY_GOAL - totalCommission, 0)
   
   const textColor = isDarkMode ? 'text-white' : 'text-slate-900'
@@ -53,7 +53,7 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
                 key={totalCommission}
                 initial={{ width: 0 }}
                 animate={{ width: `${displayedWidth}%` }}
-                style={{ width: `${displayedWidth}%` }}
+                style={{ width: `${displayedWidth}%`, minWidth: displayedWidth > 0 ? '2%' : '0%' }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] animate-flow-gradient" />
