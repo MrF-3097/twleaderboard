@@ -69,7 +69,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents }) =
             </div>
             <div className="flex-1 flex flex-col justify-center items-center min-h-0">
               <p className={`text-base ${textColorMuted} mb-1`}>Total Comision</p>
-              <p className={`font-bold ${textColor} break-words overflow-hidden text-center`} style={{ fontSize: '5rem', lineHeight: '1' }}>
+              <p className={`font-bold ${textColor} break-words overflow-hidden text-center`} style={{ fontSize: '4.25rem', lineHeight: '1' }}>
                 {formatCommission(stats?.total_commission || 0)}
               </p>
             </div>

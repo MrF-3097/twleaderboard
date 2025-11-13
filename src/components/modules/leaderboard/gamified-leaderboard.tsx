@@ -19,7 +19,7 @@ const MARGIN_TOP_PERCENT = 3 // 3% margin top
 const MARGIN_BOTTOM_PERCENT = 0 // No bottom margin (using negative margin from page)
 const HEADER_HEIGHT = 120 // Header + title + padding (description removed)
 const CARD_GAP = 3 // Gap between cards (smaller for more agents)
-const SIZE_MULTIPLIER = 1.1 // 10% size increase
+const SIZE_MULTIPLIER = 0.99 // 10% size reduction (from 1.1 to 0.99)
 
 /**
  * Calculate dynamic scaling factor based on number of agents

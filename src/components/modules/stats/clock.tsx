@@ -76,18 +76,18 @@ export const Clock: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
               className={`text-9xl font-bold ${textColor} tabular-nums`}
-              style={{ fontSize: '8rem', lineHeight: '1' }}
+              style={{ fontSize: '6.8rem', lineHeight: '1' }}
             >
               {hours}
             </motion.span>
-            <span className={`text-9xl font-bold ${textColorMuted}`} style={{ fontSize: '8rem', lineHeight: '1' }}>:</span>
+            <span className={`text-9xl font-bold ${textColorMuted}`} style={{ fontSize: '6.8rem', lineHeight: '1' }}>:</span>
             <motion.span
               key={minutes}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
               className={`text-9xl font-bold ${textColor} tabular-nums`}
-              style={{ fontSize: '8rem', lineHeight: '1' }}
+              style={{ fontSize: '6.8rem', lineHeight: '1' }}
             >
               {minutes}
             </motion.span>
