@@ -43,7 +43,7 @@ const getRankBackground = (rank: number, isDarkMode: boolean) => {
       return 'bg-gradient-to-br from-[#E8E8E8] via-[#C0C0C0] to-[#A8A8A8] border-[#C0C0C0]/80'
     case 3:
       // Matte bronze background (specified hex)
-      return 'bg-[#BC7B3D] border-[#8C5523]'
+      return 'bg-[#C78D55] border-[#A97035]'
     default:
       return isDarkMode 
         ? 'bg-transparent border-white/20' 
