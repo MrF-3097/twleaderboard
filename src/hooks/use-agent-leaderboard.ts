@@ -3,6 +3,8 @@ import type { Agent, AgentStats, LeaderboardRankChange } from '@/types'
 import { useLeaderboardStream } from './use-leaderboard-stream'
 import type { ExternalAgent, ExternalStats } from '@/types/external-api'
 
+const MIN_VISIBLE_AGENTS = 10
+
 interface UseAgentLeaderboardReturn {
   agents: Agent[]
   stats: AgentStats | null
@@ -80,6 +82,53 @@ const mapExternalAgentToAgent = (
     position,
     first_name: externalAgent.first_name || undefined,
     last_name: externalAgent.last_name || undefined,
+  }
+}
+
+const getRebsFullName = (agent: RebsAgent): string => {
+  const name = agent.name?.trim()
+  if (name) return name
+
+  const combined = `${agent.first_name ?? ''} ${agent.last_name ?? ''}`.trim()
+  return combined || ''
+}
+
+const createFallbackAgentFromRebs = (agent: RebsAgent, fallbackIndex: number): Agent => {
+  const baseName = getRebsFullName(agent) || `Agent necunoscut ${fallbackIndex + 1}`
+  const displayName = `${baseName} (fără tranzacții)`
+  const normalizedName = baseName.toLowerCase().replace(/\s+/g, '-')
+  const id = agent.id ? `rebs-${agent.id}` : `rebs-${normalizedName || fallbackIndex}`
+
+  return {
+    id,
+    name: displayName,
+    avatar: agent.avatar || agent.profile_picture || undefined,
+    profile_picture: agent.profile_picture || agent.avatar || undefined,
+    email: agent.email || undefined,
+    phone: agent.phone || undefined,
+    position: agent.position || undefined,
+    first_name: agent.first_name || undefined,
+    last_name: agent.last_name || undefined,
+    rank: undefined,
+    closed_transactions: 0,
+    total_value: 0,
+    total_commission: 0,
+    xp: 0,
+    level: 1,
+  }
+}
+
+const createPlaceholderAgent = (index: number): Agent => {
+  const placeholderName = `Agent necunoscut ${index}`
+  return {
+    id: `placeholder-${index}`,
+    name: `${placeholderName} (fără tranzacții)`,
+    rank: undefined,
+    closed_transactions: 0,
+    total_value: 0,
+    total_commission: 0,
+    xp: 0,
+    level: 1,
   }
 }
 
@@ -242,30 +291,68 @@ export const useAgentLeaderboard = (
    * Optimized for instant updates on TV
    */
   useEffect(() => {
-    if (externalAgents.length === 0 && !isLoading) {
-      setAgents([])
-      setStats(null)
-      previousAgentsRef.current = []
-      return
+    const actualAgentsSorted = [...mappedAgents].sort((a, b) => {
+      const rankA = a.rank ?? Number.MAX_SAFE_INTEGER
+      const rankB = b.rank ?? Number.MAX_SAFE_INTEGER
+      if (rankA === rankB) {
+        return (a.name ?? '').localeCompare(b.name ?? '')
+      }
+      return rankA - rankB
+    })
+
+    const existingNameSet = new Set(
+      actualAgentsSorted
+        .map(agent => agent.name?.toLowerCase().trim())
+        .filter((name): name is string => Boolean(name))
+    )
+
+    const fallbackAgents: Agent[] = []
+    if (actualAgentsSorted.length < MIN_VISIBLE_AGENTS) {
+      const needed = MIN_VISIBLE_AGENTS - actualAgentsSorted.length
+
+      const rebsFallback = rebsAgentsRef.current
+        .filter(rebsAgent => {
+          const name = getRebsFullName(rebsAgent).toLowerCase().trim()
+          if (!name) return false
+          return !existingNameSet.has(name)
+        })
+        .sort((a, b) => getRebsFullName(a).localeCompare(getRebsFullName(b)))
+        .map((agent, index) => createFallbackAgentFromRebs(agent, index))
+
+      for (const fallback of rebsFallback) {
+        fallbackAgents.push(fallback)
+        if (fallbackAgents.length >= needed) break
+      }
+
+      let placeholderIndex = 1
+      while (fallbackAgents.length < needed) {
+        fallbackAgents.push(
+          createPlaceholderAgent(actualAgentsSorted.length + placeholderIndex)
+        )
+        placeholderIndex += 1
+      }
     }
 
-    // Detect rank changes immediately (using memoized agents)
+    const combinedAgents = [...actualAgentsSorted, ...fallbackAgents].map((agent, index) => ({
+      ...agent,
+      rank: index + 1,
+    }))
+
     if (previousAgentsRef.current.length > 0) {
-      const changes = detectRankChanges(previousAgentsRef.current, mappedAgents)
+      const changes = detectRankChanges(previousAgentsRef.current, combinedAgents)
       if (changes.length > 0) {
         setRankChanges(changes)
-        // Clear rank changes after 3 seconds (reduced for faster updates)
         setTimeout(() => setRankChanges([]), 3000)
       }
     }
 
-    // Immediate state updates - batch together for optimal performance
-    previousAgentsRef.current = mappedAgents
-    setAgents(mappedAgents)
-    
-    // Map stats if available
+    previousAgentsRef.current = combinedAgents
+    setAgents(combinedAgents)
+
     if (externalStats) {
-      setStats(mapExternalStatsToStats(externalStats, mappedAgents, findRebsAgent))
+      setStats(mapExternalStatsToStats(externalStats, combinedAgents, findRebsAgent))
+    } else if (!isLoading && combinedAgents.length === 0) {
+      setStats(null)
     }
   }, [mappedAgents, externalStats, isLoading, detectRankChanges, findRebsAgent])
 
