@@ -22,6 +22,8 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
 
   // Calculate progress percentage (can exceed 100%)
   const progressPercentage = (totalCommission / MONTHLY_GOAL) * 100
+  const progressWidth = Math.min(progressPercentage, 100)
+  const displayedWidth = progressWidth <= 0 ? 0 : progressWidth
   const remaining = Math.max(MONTHLY_GOAL - totalCommission, 0)
   
   const textColor = isDarkMode ? 'text-white' : 'text-slate-900'
@@ -43,12 +45,15 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
           <div className="relative w-full">
             {/* Background track */}
             <div className={`h-12 ${trackBg} rounded-full overflow-hidden relative`}>
+              {/* Ambient glow on track */}
+              <div className="absolute inset-0 animate-track-glow pointer-events-none" />
               {/* Animated gradient progress bar */}
               <motion.div
                 className="h-full rounded-full relative overflow-hidden"
                 key={totalCommission}
                 initial={{ width: 0 }}
-                animate={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                animate={{ width: `${displayedWidth}%` }}
+                style={{ width: `${displayedWidth}%` }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] animate-flow-gradient" />

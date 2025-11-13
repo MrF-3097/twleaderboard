@@ -63,7 +63,7 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
   }, [agent.avatar, agent.profile_picture])
   
   // Calculate sizes based on scale with minimums for readability
-  const avatarSize = Math.max(36, 80 * scale) // Minimum 36px for visibility
+  const avatarSize = Math.max(36, 85.6 * scale) // 7% larger than previous size
   const rankIconSize = Math.max(32, 80 * scale) // Minimum 32px for visibility
   const rankChangeIconSize = Math.max(20, 32 * scale) // Minimum 20px
   

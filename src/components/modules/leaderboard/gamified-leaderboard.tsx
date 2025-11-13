@@ -256,7 +256,7 @@ export const GamifiedLeaderboard: React.FC = () => {
               </div>
             ) : (
               <div 
-                style={{ gap: `${CARD_GAP * scale}px` }} 
+                style={{ gap: '4px' }} 
                 className="flex flex-col h-full overflow-hidden"
               >
                 {/* Prerender all agents in DOM for smooth reordering when ranks change */}
