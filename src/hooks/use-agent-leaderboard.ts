@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type { Agent, AgentStats, LeaderboardRankChange } from '@/types'
-import { useExternalLeaderboard } from './use-external-leaderboard'
+import { useLeaderboardStream } from './use-leaderboard-stream'
 import type { ExternalAgent, ExternalStats } from '@/types/external-api'
 
 interface UseAgentLeaderboardReturn {
@@ -111,7 +111,7 @@ const mapExternalStatsToStats = (
 }
 
 export const useAgentLeaderboard = (
-  pollingInterval: number = 5000
+  pollingInterval: number = 5000 // Kept for backward compatibility, but not used with SSE
 ): UseAgentLeaderboardReturn => {
   const [agents, setAgents] = useState<Agent[]>([])
   const [stats, setStats] = useState<AgentStats | null>(null)
@@ -120,14 +120,14 @@ export const useAgentLeaderboard = (
   const rebsAgentsRef = useRef<RebsAgent[]>([])
   const [rebsAgentsLoaded, setRebsAgentsLoaded] = useState(false)
   
-  // Fetch data from external API
+  // Use SSE stream instead of polling for better performance
   const {
     agents: externalAgents,
     stats: externalStats,
     isLoading,
     error,
     refetch: refetchExternal,
-  } = useExternalLeaderboard(pollingInterval)
+  } = useLeaderboardStream()
 
   /**
    * Fetch REBS agents for avatar enrichment
