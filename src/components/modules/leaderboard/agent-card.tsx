@@ -42,8 +42,8 @@ const getRankBackground = (rank: number, isDarkMode: boolean) => {
       // Silver gradient background
       return 'bg-gradient-to-br from-[#E8E8E8] via-[#C0C0C0] to-[#A8A8A8] border-[#C0C0C0]/80'
     case 3:
-      // Bronze gradient background
-      return 'bg-gradient-to-br from-[#CD7F32] via-[#B87333] to-[#8B4513] border-[#CD7F32]/80'
+      // Matte bronze background (subtle, non-reflective)
+      return 'bg-[#917052] border-[#6F5339]'
     default:
       return isDarkMode 
         ? 'bg-transparent border-white/20' 
@@ -99,7 +99,7 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
         )} ${isTV ? '' : (isDarkMode ? 'hover:border-white/30' : 'hover:border-slate-400')} rounded-2xl border`}
       >
         {/* Metal background for top 3 */}
-        {isTopThree && (
+        {isTopThree && rank <= 2 && (
           <>
             {/* Base metal gradient */}
             <div className="absolute inset-0 opacity-95" />
