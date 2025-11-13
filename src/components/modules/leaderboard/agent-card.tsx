@@ -1,6 +1,6 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { TrendingUp, TrendingDown, Trophy, Award } from 'lucide-react'
 import { useThemeContext } from '@/contexts/theme-context'
@@ -53,8 +53,14 @@ const getRankBackground = (rank: number, isDarkMode: boolean) => {
 
 const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, rankChange, scale = 1 }) => {
   const { isDarkMode } = useThemeContext()
+  const [imageError, setImageError] = useState(false)
   const rank = agent.rank || index + 1
   const isTopThree = rank <= 3
+  
+  // Reset image error when avatar URL changes
+  useEffect(() => {
+    setImageError(false)
+  }, [agent.avatar, agent.profile_picture])
   
   // Calculate sizes based on scale with minimums for readability
   const avatarSize = Math.max(36, 80 * scale) // Minimum 36px for visibility
@@ -166,11 +172,13 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
                     minHeight: `${36}px`
                   }}
                 >
-                  {agent.avatar || agent.profile_picture ? (
+                  {(agent.avatar || agent.profile_picture) && !imageError ? (
                     <img
                       src={agent.avatar || agent.profile_picture}
                       alt={agent.name}
                       className="w-full h-full object-cover"
+                      onError={() => setImageError(true)}
+                      loading="lazy"
                     />
                   ) : (
                     <div 
@@ -246,11 +254,15 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
 // Memoize component to prevent unnecessary re-renders
 export const AgentCard = memo(AgentCardComponent, (prevProps, nextProps) => {
   // Only re-render if agent data actually changed
+  // Return true if props are equal (skip re-render), false if different (re-render)
   return (
     prevProps.agent.id === nextProps.agent.id &&
     prevProps.agent.rank === nextProps.agent.rank &&
     prevProps.agent.total_commission === nextProps.agent.total_commission &&
     prevProps.agent.closed_transactions === nextProps.agent.closed_transactions &&
+    prevProps.agent.avatar === nextProps.agent.avatar &&
+    prevProps.agent.profile_picture === nextProps.agent.profile_picture &&
+    prevProps.agent.name === nextProps.agent.name &&
     prevProps.rankChange === nextProps.rankChange &&
     prevProps.scale === nextProps.scale
   )
