@@ -259,18 +259,30 @@ export const GamifiedLeaderboard: React.FC = () => {
                 style={{ gap: `${CARD_GAP * scale}px` }} 
                 className="flex flex-col h-full overflow-hidden"
               >
-                {agents.slice(0, 10).map((agent, index) => {
+                {/* Prerender all agents in DOM for smooth reordering when ranks change */}
+                {/* React will just reorder existing elements instead of creating new ones */}
+                {agents.map((agent, index) => {
                   const rankChange = rankChanges.find((rc) => rc.agentId === agent.id)
+                  const isVisible = index < 10 // Show first 10, hide rest but keep in DOM
                   
                   return (
-                    <AgentCard
+                    <div
                       key={agent.id}
-                      agent={agent}
-                      index={index}
-                      onClick={() => handleAgentClick(agent)}
-                      rankChange={rankChange?.type}
-                      scale={scale}
-                    />
+                      className={isVisible ? '' : 'hidden'}
+                      style={{
+                        // Keep all agents in DOM flow for React reconciliation
+                        // Hidden agents are still in DOM but not rendered visually
+                        flexShrink: 0,
+                      }}
+                    >
+                      <AgentCard
+                        agent={agent}
+                        index={index}
+                        onClick={() => handleAgentClick(agent)}
+                        rankChange={rankChange?.type}
+                        scale={scale}
+                      />
+                    </div>
                   )
                 })}
               </div>
