@@ -94,18 +94,31 @@ export const GamifiedLeaderboard: React.FC = () => {
   const previousRankChangesRef = useRef<typeof rankChanges>([])
   const [viewportHeight, setViewportHeight] = useState(DEFAULT_SCREEN_HEIGHT)
   
-  // Get actual viewport height
+  // Get actual viewport height (throttled for performance)
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null
+    
     const updateViewportHeight = () => {
       if (typeof window !== 'undefined') {
         setViewportHeight(window.innerHeight)
       }
     }
     
-    updateViewportHeight()
-    window.addEventListener('resize', updateViewportHeight)
+    const throttledUpdate = () => {
+      if (timeoutId) return
+      timeoutId = setTimeout(() => {
+        updateViewportHeight()
+        timeoutId = null
+      }, 250) // Throttle to 250ms
+    }
     
-    return () => window.removeEventListener('resize', updateViewportHeight)
+    updateViewportHeight() // Initial update
+    window.addEventListener('resize', throttledUpdate)
+    
+    return () => {
+      window.removeEventListener('resize', throttledUpdate)
+      if (timeoutId) clearTimeout(timeoutId)
+    }
   }, [])
   
   // Calculate dynamic scaling based on visible agents (always 10) and actual viewport height

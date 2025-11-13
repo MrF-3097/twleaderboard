@@ -17,11 +17,26 @@ export const Clock: React.FC = () => {
 
   useEffect(() => {
     setMounted(true)
-    const timer = setInterval(() => {
-      setTime(new Date())
-    }, 1000) // Update every second
-
-    return () => clearInterval(timer)
+    // Update every second, but use requestAnimationFrame for smoother updates on TV
+    let rafId: number | null = null
+    let lastUpdate = Date.now()
+    
+    const updateTime = () => {
+      const now = Date.now()
+      if (now - lastUpdate >= 1000) {
+        setTime(new Date())
+        lastUpdate = now
+      }
+      rafId = requestAnimationFrame(updateTime)
+    }
+    
+    rafId = requestAnimationFrame(updateTime)
+    
+    return () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId)
+      }
+    }
   }, [])
 
   // Format time for Romanian timezone (Europe/Bucharest)

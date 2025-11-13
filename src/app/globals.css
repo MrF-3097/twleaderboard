@@ -72,6 +72,28 @@ body {
   position: relative;
 }
 
+/* Performance optimizations for Smart TV */
+/* Use GPU acceleration for animated elements */
+[data-animated] {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Reduce motion for better performance on TV (coarse pointer = TV/remote) */
+@media (pointer: coarse) {
+  * {
+    transition-duration: 0.2s !important;
+    animation-duration: 0.2s !important;
+  }
+  
+  /* Disable hover effects on TV */
+  *:hover {
+    transform: none !important;
+  }
+}
+
 /* Hide scrollbar but keep functionality */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* IE and Edge */

@@ -48,7 +48,7 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
                 className="h-full rounded-full relative overflow-hidden"
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(progressPercentage, 100)}%` }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
               >
                 {/* Gold gradient with flowing animation */}
                 <motion.div 

@@ -1,9 +1,13 @@
 'use client'
 
+import { memo } from 'react'
 import { motion } from 'framer-motion'
 import { TrendingUp, TrendingDown, Trophy, Award } from 'lucide-react'
 import { useThemeContext } from '@/contexts/theme-context'
 import type { Agent } from '@/types'
+
+// Detect if running on TV (no pointer device)
+const isTV = typeof window !== 'undefined' && !window.matchMedia('(pointer: fine)').matches
 
 interface AgentCardProps {
   agent: Agent
@@ -47,7 +51,7 @@ const getRankBackground = (rank: number, isDarkMode: boolean) => {
   }
 }
 
-export const AgentCard: React.FC<AgentCardProps> = ({ agent, index, onClick, rankChange, scale = 1 }) => {
+const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, rankChange, scale = 1 }) => {
   const { isDarkMode } = useThemeContext()
   const rank = agent.rank || index + 1
   const isTopThree = rank <= 3
@@ -61,21 +65,32 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent, index, onClick, ran
   const textColorMuted = isDarkMode ? 'text-white/70' : 'text-slate-600'
   const borderColor = isDarkMode ? 'border-white/20' : 'border-slate-300'
 
+  // Optimized animations for TV - simpler and faster
+  const animationProps = isTV
+    ? {
+        initial: { opacity: 1 },
+        animate: { opacity: 1 },
+        transition: { duration: 0.1 }
+      }
+    : {
+        layout: true,
+        initial: { opacity: 0, y: 20 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: -20 },
+        transition: { duration: 0.3, ease: 'easeOut' },
+        whileHover: { scale: 1.02, transition: { duration: 0.2 } }
+      }
+
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.5, type: 'spring', stiffness: 100 }}
-      whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+      {...animationProps}
       onClick={onClick}
       className="flex-shrink-0"
     >
       <div
-        className={`relative overflow-hidden cursor-pointer transition-all duration-300 ${getRankBackground(
+        className={`relative overflow-hidden ${isTV ? '' : 'cursor-pointer'} ${isTV ? '' : 'transition-all duration-200'} ${getRankBackground(
           rank, isDarkMode
-        )} ${isDarkMode ? 'hover:border-white/30' : 'hover:border-slate-400'} rounded-2xl border`}
+        )} ${isTV ? '' : (isDarkMode ? 'hover:border-white/30' : 'hover:border-slate-400')} rounded-2xl border`}
       >
         {/* Metal background for top 3 */}
         {isTopThree && (
@@ -227,4 +242,17 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent, index, onClick, ran
     </motion.div>
   )
 }
+
+// Memoize component to prevent unnecessary re-renders
+export const AgentCard = memo(AgentCardComponent, (prevProps, nextProps) => {
+  // Only re-render if agent data actually changed
+  return (
+    prevProps.agent.id === nextProps.agent.id &&
+    prevProps.agent.rank === nextProps.agent.rank &&
+    prevProps.agent.total_commission === nextProps.agent.total_commission &&
+    prevProps.agent.closed_transactions === nextProps.agent.closed_transactions &&
+    prevProps.rankChange === nextProps.rankChange &&
+    prevProps.scale === nextProps.scale
+  )
+})
 
