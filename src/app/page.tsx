@@ -15,14 +15,15 @@ function TVDisplayContent({ stats, agents }: { stats: any, agents: any }) {
       isDarkMode ? 'bg-[#0F172A]' : 'bg-[#F8FAFC]'
     }`}>
       <div 
-        className="w-full flex gap-8" 
+        className="w-full flex" 
         style={{ 
           marginTop: '3%', 
           marginBottom: '-20%', 
           height: '115%',
           paddingLeft: '4%',
           paddingRight: '4%',
-          paddingBottom: '-20%'
+          paddingBottom: '-20%',
+          gap: '50px',
         }}
       >
         {/* Column 1: Stats (2 rows) */}

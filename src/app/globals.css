@@ -72,6 +72,36 @@ body {
   position: relative;
 }
 
+@keyframes flow-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes shine-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-flow-gradient {
+  background-size: 200% 100%;
+  animation: flow-gradient 4s ease-in-out infinite;
+}
+
+.animate-shine-sweep {
+  animation: shine-sweep 2.5s ease-in-out infinite;
+}
+
 /* Performance optimizations for Smart TV */
 /* Use GPU acceleration for animated elements */
 [data-animated] {

@@ -9,7 +9,7 @@ interface MonthlyGoalProgressProps {
   agents: Agent[]
 }
 
-const MONTHLY_GOAL = 20000 // 20,000 EUR
+const MONTHLY_GOAL = 30000 // 30,000 EUR
 
 export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents }) => {
   const { isDarkMode } = useThemeContext()
@@ -46,38 +46,13 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
               {/* Animated gradient progress bar */}
               <motion.div
                 className="h-full rounded-full relative overflow-hidden"
+                key={totalCommission}
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(progressPercentage, 100)}%` }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
               >
-                {/* Gold gradient with flowing animation */}
-                <motion.div 
-                  className="absolute inset-0 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700]"
-                  style={{
-                    backgroundSize: '200% 100%',
-                  }}
-                  animate={{
-                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
-                
-                {/* Shine effect overlay */}
-                <motion.div 
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                  animate={{
-                    x: ['-100%', '100%'],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] animate-flow-gradient" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine-sweep" />
               </motion.div>
               
               {/* Progress percentage text overlay */}
@@ -100,7 +75,7 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
           </div>
 
           {/* Stats below progress bar */}
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-sm" style={{ marginTop: '5px' }}>
             <div className="flex flex-col">
               <p className={textColorMuted}>Curent</p>
               <motion.p
