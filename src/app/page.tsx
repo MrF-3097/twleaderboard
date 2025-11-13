@@ -12,7 +12,7 @@ function TVDisplayContent({ stats, agents }: { stats: any, agents: any }) {
 
   return (
     <main className={`h-screen w-screen overflow-hidden transition-colors duration-500 ${
-      isDarkMode ? 'bg-[#0F172A]' : 'bg-[#F8FAFC]'
+      isDarkMode ? 'bg-[#1F2933]' : 'bg-[#F8FAFC]'
     }`}>
       <div 
         className="w-full flex" 
