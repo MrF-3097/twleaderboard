@@ -57,6 +57,7 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
   const rank = agent.rank || index + 1
   const isTopThree = rank <= 3
   const isSeparator = rank === 3
+  const isFourthOrBelow = rank >= 4
   
   // Reset image error when avatar URL changes
   useEffect(() => {
@@ -97,16 +98,17 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
       <div
         className={`relative overflow-hidden ${isTV ? '' : 'cursor-pointer'} ${isTV ? '' : 'transition-all duration-200'} ${getRankBackground(
           rank, isDarkMode
-        )} ${isTV ? '' : (isDarkMode ? 'hover:border-white/30' : 'hover-border-slate-400')} ${rank <= 3 ? 'rounded-2xl' : 'rounded'} border`}
-        style={
-          rank === 2
-            ? { marginBottom: `${15 * scale}px`, borderBottomLeftRadius: '0', borderBottomRightRadius: '0' }
-            : rank === 3
-            ? { marginBottom: `${15 * scale}px` }
-            : rank === 4
-            ? { borderTopLeftRadius: '0', borderTopRightRadius: '0', marginTop: `${15 * scale}px` }
-            : undefined
-        }
+        )} ${isTV ? '' : (isDarkMode ? 'hover:border-white/30' : 'hover-border-slate-400')} ${rank <= 3 ? 'rounded-2xl' : 'rounded-none'} border`}
+        style={{
+          ...(rank === 1 && { marginBottom: `${15 * scale}px` }),
+          ...(rank === 2 && { marginTop: `${15 * scale}px`, marginBottom: `${15 * scale}px` }),
+          ...(rank === 3 && { marginTop: `${15 * scale}px` }),
+          ...(rank === 4 && { marginTop: `${15 * scale}px` }),
+          ...(isFourthOrBelow && {
+            borderLeftWidth: 0,
+            borderRightWidth: 0,
+          }),
+        }}
       >
         {/* Metal background for top 3 */}
         {isTopThree && rank <= 2 && (
