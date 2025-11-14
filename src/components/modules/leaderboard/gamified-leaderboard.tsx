@@ -85,6 +85,7 @@ const TOP_PAUSE_DURATION = 120000 // 2 minutes at top
 const BOTTOM_PAUSE_DURATION = 5000 // 5 seconds at bottom
 const SCROLL_SPEED = 30 // pixels per second
 const AGENTS_VISIBLE = 10 // Number of agents visible at once
+const PODIUM_LOOP_INTERVAL = 60000
 
 export const GamifiedLeaderboard: React.FC = () => {
   const { isDarkMode } = useThemeContext()
@@ -124,6 +125,16 @@ export const GamifiedLeaderboard: React.FC = () => {
   // Calculate dynamic scaling based on visible agents (always 10) and actual viewport height
   const scale = useMemo(() => calculateScaling(AGENTS_VISIBLE, viewportHeight), [viewportHeight])
   
+  const [podiumCycleKey, setPodiumCycleKey] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPodiumCycleKey((prev) => prev + 1)
+    }, PODIUM_LOOP_INTERVAL)
+
+    return () => clearInterval(interval)
+  }, [])
+
   const textColor = isDarkMode ? 'text-white' : 'text-slate-900'
   const textColorMuted = isDarkMode ? 'text-white/70' : 'text-slate-600'
   const borderColor = isDarkMode ? 'border-white/20' : 'border-slate-300'
@@ -252,9 +263,10 @@ export const GamifiedLeaderboard: React.FC = () => {
               >
                 {/* Prerender all agents in DOM for smooth reordering when ranks change */}
                 {/* React will just reorder existing elements instead of creating new ones */}
-                {agents.map((agent, index) => {
+                      {agents.map((agent, index) => {
                   const rankChange = rankChanges.find((rc) => rc.agentId === agent.id)
                   const isVisible = index < 10 // Show first 10, hide rest but keep in DOM
+                         const agentRank = agent.rank ?? index + 1
                   
                   return (
                     <div
@@ -271,7 +283,8 @@ export const GamifiedLeaderboard: React.FC = () => {
                         index={index}
                         onClick={() => handleAgentClick(agent)}
                         rankChange={rankChange?.type}
-                        scale={scale}
+                              scale={scale}
+                              podiumCycleKey={agentRank <= 3 ? podiumCycleKey : undefined}
                       />
                     </div>
                   )

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Target } from 'lucide-react'
 import type { Agent } from '@/types'
@@ -10,6 +11,7 @@ interface MonthlyGoalProgressProps {
 }
 
 const MONTHLY_GOAL = 30000 // 30,000 EUR
+const LOOP_DURATION_MS = 30000
 
 export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents }) => {
   const { isDarkMode } = useThemeContext()
@@ -20,11 +22,34 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
     0
   )
 
+  const [loopProgress, setLoopProgress] = useState(0)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.requestAnimationFrame === 'undefined') {
+      return undefined
+    }
+
+    let frameId = 0
+    const startTime = window.performance.now()
+
+    const tick = () => {
+      const now = window.performance.now()
+      const elapsed = (now - startTime) % LOOP_DURATION_MS
+      setLoopProgress(elapsed / LOOP_DURATION_MS)
+      frameId = window.requestAnimationFrame(tick)
+    }
+
+    frameId = window.requestAnimationFrame(tick)
+
+    return () => window.cancelAnimationFrame(frameId)
+  }, [])
+
   // Calculate progress percentage (can exceed 100%)
   const progressPercentage = (totalCommission / MONTHLY_GOAL) * 100
   const progressWidth = Math.min(progressPercentage, 100)
   const minVisibleWidth = 4
   const displayedWidth = progressWidth <= 0 ? minVisibleWidth : progressWidth
+  const loopWidth = Math.max(minVisibleWidth, loopProgress * 100)
   const remaining = Math.max(MONTHLY_GOAL - totalCommission, 0)
   
   const textColor = isDarkMode ? 'text-white' : 'text-slate-900'
@@ -49,9 +74,9 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
               <div
                 className="h-full rounded-full bg-[#FFD700]"
                 style={{
-                  width: `${displayedWidth}%`,
+                  width: `${loopWidth}%`,
                   minWidth: `${minVisibleWidth}%`,
-                  transition: 'width 0.6s ease-out',
+                  transition: 'width 0.3s linear',
                 }}
               />
               

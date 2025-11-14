@@ -170,3 +170,5 @@ For TV display deployment:
 
 **Francesco 14.11.2025**: Locked the monthly goal progress bar to a static gold fill (no gradients or animations) with a guaranteed minimum width, ensuring Smart TVs and other restrictive devices always display the progress accurately even at the cost of visual flair.
 
+**Francesco 14.11.2025**: Reintroduced motion by animating the monthly goal progress bar on a deterministic 30-second loop that continuously drains and refills, decoupled from the numeric stats. Added an hourly podium flourish where the top three agent cards glide off-screen to the right in order, then spring back in from the top with staggered inertia, reinforcing their spotlight on large displays.
+

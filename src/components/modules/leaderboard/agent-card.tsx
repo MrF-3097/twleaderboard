@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useAnimationControls } from 'framer-motion'
 import { TrendingUp, TrendingDown, Trophy, Award } from 'lucide-react'
 import { useThemeContext } from '@/contexts/theme-context'
 import type { Agent } from '@/types'
@@ -15,6 +15,7 @@ interface AgentCardProps {
   onClick: () => void
   rankChange?: 'up' | 'down' | 'same'
   scale?: number
+  podiumCycleKey?: number
 }
 
 const getRankIcon = (rank: number, scale: number = 1, isDarkMode: boolean) => {
@@ -51,12 +52,11 @@ const getRankBackground = (rank: number, isDarkMode: boolean) => {
   }
 }
 
-const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, rankChange, scale = 1 }) => {
+const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, rankChange, scale = 1, podiumCycleKey }) => {
   const { isDarkMode } = useThemeContext()
   const [imageError, setImageError] = useState(false)
   const rank = agent.rank || index + 1
   const isTopThree = rank <= 3
-  const isSeparator = rank === 3
   const isFourthOrBelow = rank >= 4
   
   // Reset image error when avatar URL changes
@@ -74,6 +74,64 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
   const borderColor = isDarkMode ? 'border-white/20' : 'border-slate-300'
 
   // Optimized animations for TV - simpler and faster
+  const controls = useAnimationControls()
+
+  useEffect(() => {
+    if (!isTopThree || isTV) {
+      return
+    }
+    controls.set({ x: 0, y: 0, opacity: 1 })
+  }, [controls, isTopThree])
+
+  useEffect(() => {
+    if (!isTopThree || typeof podiumCycleKey === 'undefined' || isTV) {
+      return
+    }
+
+    let isCancelled = false
+
+    const runSequence = async () => {
+      const exitDelay = (rank - 1) * 0.1
+
+      await controls.start({
+        x: '120%',
+        opacity: 0,
+        transition: {
+          duration: 0.8,
+          ease: 'easeInOut',
+          delay: exitDelay,
+        },
+      })
+
+      if (isCancelled) {
+        return
+      }
+
+      controls.set({ x: 0, y: '-60%', opacity: 0 })
+
+      await controls.start({
+        x: 0,
+        y: 0,
+        opacity: 1,
+        transition: {
+          type: 'spring',
+          stiffness: 240,
+          damping: 18,
+          mass: 0.9,
+          delay: (rank - 1) * 0.05,
+        },
+      })
+    }
+
+    runSequence()
+
+    return () => {
+      isCancelled = true
+      controls.stop()
+      controls.set({ x: 0, y: 0, opacity: 1 })
+    }
+  }, [controls, isTopThree, podiumCycleKey, rank])
+
   const animationProps = isTV
     ? {
         initial: { opacity: 1 },
@@ -89,9 +147,16 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
         whileHover: { scale: 1.02, transition: { duration: 0.2 } }
       }
 
+  const { animate: baseAnimate, ...restMotionProps } = animationProps as {
+    animate?: any
+  }
+
+  const motionAnimate = isTopThree && !isTV ? controls : baseAnimate
+
   return (
     <motion.div
-      {...animationProps}
+      {...restMotionProps}
+      animate={motionAnimate}
       onClick={onClick}
       className="flex-shrink-0"
     >
