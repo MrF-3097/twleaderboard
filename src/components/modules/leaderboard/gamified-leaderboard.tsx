@@ -128,11 +128,18 @@ export const GamifiedLeaderboard: React.FC = () => {
   const [podiumCycleKey, setPodiumCycleKey] = useState(0)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPodiumCycleKey((prev) => prev + 1)
-    }, PODIUM_LOOP_INTERVAL)
+    let timeoutId: ReturnType<typeof setTimeout>
 
-    return () => clearInterval(interval)
+    const scheduleCycle = () => {
+      setPodiumCycleKey((prev) => prev + 1)
+      timeoutId = setTimeout(scheduleCycle, PODIUM_LOOP_INTERVAL)
+    }
+
+    timeoutId = setTimeout(scheduleCycle, PODIUM_LOOP_INTERVAL)
+
+    return () => {
+      clearTimeout(timeoutId)
+    }
   }, [])
 
   const textColor = isDarkMode ? 'text-white' : 'text-slate-900'
