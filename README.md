@@ -168,5 +168,5 @@ For TV display deployment:
 
 **Francesco 18.08.2025**: Integrated external leaderboard API integration. Created `use-external-leaderboard` hook with polling (5-second interval), ETag cache validation, and retry logic with exponential backoff. Updated `use-agent-leaderboard` to use external API data instead of local database. Added Zod schemas for API response validation. Updated types to include `total_commission` field. Made API URL configurable via environment variable. Updated polling interval from 30 seconds to 5 seconds to match API cache duration. Maintained smooth animations and rank change detection. The leaderboard now syncs in real-time with the main Agent Dashboard, showing updates within 5 seconds of admin changes.
 
-**Francesco 14.11.2025**: Forced the monthly goal progress bar to render identically on every device by removing coarse-pointer fallbacks, keeping the Framer Motion animation for all clients, and raising the minimum visible width so even aggressive TV browsers display the gold fill without collapsing it.
+**Francesco 14.11.2025**: Locked the monthly goal progress bar to a static gold fill (no gradients or animations) with a guaranteed minimum width, ensuring Smart TVs and other restrictive devices always display the progress accurately even at the cost of visual flair.
 

@@ -46,20 +46,14 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
           <div className="relative w-full">
             {/* Background track */}
             <div className={`h-12 ${trackBg} rounded-full overflow-hidden relative`}>
-              {/* Ambient glow on track */}
-              <div className="absolute inset-0 animate-track-glow pointer-events-none" />
-              {/* Animated gradient progress bar */}
-              <motion.div
-                className="h-full rounded-full relative overflow-hidden"
-                key={totalCommission}
-                initial={{ width: 0 }}
-                animate={{ width: `${displayedWidth}%` }}
-                style={{ width: `${displayedWidth}%`, minWidth: `${minVisibleWidth}%`, willChange: 'width' }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] animate-flow-gradient" />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine-sweep" />
-              </motion.div>
+              <div
+                className="h-full rounded-full bg-[#FFD700]"
+                style={{
+                  width: `${displayedWidth}%`,
+                  minWidth: `${minVisibleWidth}%`,
+                  transition: 'width 0.6s ease-out',
+                }}
+              />
               
               {/* Progress percentage text overlay */}
               <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -73,10 +67,6 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
                 </motion.span>
               </div>
               
-              {/* Overcompletion indicator - show when over 100% */}
-              {progressPercentage > 100 && (
-                <div className="absolute right-0 top-0 bottom-0 w-2 bg-[#FFD700] opacity-50" />
-              )}
             </div>
           </div>
 
