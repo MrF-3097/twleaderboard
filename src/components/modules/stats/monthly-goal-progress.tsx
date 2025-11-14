@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Target } from 'lucide-react'
 import type { Agent } from '@/types'
@@ -20,10 +21,32 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
     0
   )
 
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const mediaQuery = window.matchMedia('(pointer: coarse)')
+    const handleChange = () => setIsCoarsePointer(mediaQuery.matches)
+
+    handleChange()
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', handleChange)
+      return () => mediaQuery.removeEventListener('change', handleChange)
+    }
+
+    mediaQuery.addListener(handleChange)
+    return () => mediaQuery.removeListener(handleChange)
+  }, [])
+
   // Calculate progress percentage (can exceed 100%)
   const progressPercentage = (totalCommission / MONTHLY_GOAL) * 100
   const progressWidth = Math.min(progressPercentage, 100)
-  const displayedWidth = progressWidth <= 0 ? 2 : progressWidth
+  const minVisibleWidth = isCoarsePointer ? 4 : 2
+  const displayedWidth = progressWidth <= 0 ? minVisibleWidth : progressWidth
   const remaining = Math.max(MONTHLY_GOAL - totalCommission, 0)
   
   const textColor = isDarkMode ? 'text-white' : 'text-slate-900'
@@ -42,23 +65,34 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
         
         <div className="flex-1 flex flex-col justify-center min-h-0 gap-3">
           {/* Progress Bar Container */}
-          <div className="relative w-full tv-progress-wrapper">
+          <div className="relative w-full">
             {/* Background track */}
-            <div className={`h-12 ${trackBg} rounded-full overflow-hidden relative tv-progress-track`}>
+            <div className={`h-12 ${trackBg} rounded-full overflow-hidden relative`}>
               {/* Ambient glow on track */}
-              <div className="absolute inset-0 animate-track-glow pointer-events-none tv-progress-glow" />
-              {/* Animated gradient progress bar */}
-              <motion.div
-                className="h-full rounded-full relative overflow-hidden tv-progress-fill"
-                key={totalCommission}
-                initial={{ width: 0 }}
-                animate={{ width: `${displayedWidth}%` }}
-                style={{ width: `${displayedWidth}%`, minWidth: displayedWidth > 0 ? '2%' : '0%' }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] animate-flow-gradient tv-progress-fill-gradient" />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine-sweep tv-progress-shine" />
-              </motion.div>
+              {!isCoarsePointer && <div className="absolute inset-0 animate-track-glow pointer-events-none" />}
+              {/* Progress fill */}
+              {isCoarsePointer ? (
+                <div
+                  className="h-full rounded-full relative overflow-hidden"
+                  style={{
+                    width: `${displayedWidth}%`,
+                    minWidth: `${minVisibleWidth}%`,
+                    background: 'linear-gradient(90deg, #FFD700, #FFB347)',
+                  }}
+                />
+              ) : (
+                <motion.div
+                  className="h-full rounded-full relative overflow-hidden"
+                  key={totalCommission}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${displayedWidth}%` }}
+                  style={{ width: `${displayedWidth}%`, minWidth: `${minVisibleWidth}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] animate-flow-gradient" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine-sweep" />
+                </motion.div>
+              )}
               
               {/* Progress percentage text overlay */}
               <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -73,7 +107,7 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
               </div>
               
               {/* Overcompletion indicator - show when over 100% */}
-              {progressPercentage > 100 && (
+              {progressPercentage > 100 && !isCoarsePointer && (
                 <div className="absolute right-0 top-0 bottom-0 w-2 bg-[#FFD700] opacity-50" />
               )}
             </div>
