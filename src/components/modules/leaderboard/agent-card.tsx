@@ -55,6 +55,7 @@ const getRankBackground = (rank: number, isDarkMode: boolean) => {
 const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, rankChange, scale = 1, podiumCycleKey }) => {
   const { isDarkMode } = useThemeContext()
   const [imageError, setImageError] = useState(false)
+  const [hasMounted, setHasMounted] = useState(false)
   const rank = agent.rank || index + 1
   const isTopThree = rank <= 3
   const isFourthOrBelow = rank >= 4
@@ -73,18 +74,22 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
   const textColorMuted = isDarkMode ? 'text-white/70' : 'text-slate-600'
   const borderColor = isDarkMode ? 'border-white/20' : 'border-slate-300'
 
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
+
   // Optimized animations for TV - simpler and faster
   const controls = useAnimationControls()
 
   useEffect(() => {
-    if (!isTopThree || isTV) {
+    if (!hasMounted || !isTopThree || isTV) {
       return
     }
     controls.set({ x: 0, y: 0, opacity: 1 })
-  }, [controls, isTopThree])
+  }, [controls, hasMounted, isTopThree])
 
   useEffect(() => {
-    if (!isTopThree || typeof podiumCycleKey === 'undefined' || isTV) {
+    if (!hasMounted || !isTopThree || typeof podiumCycleKey === 'undefined' || isTV) {
       return
     }
 
@@ -130,7 +135,7 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
       controls.stop()
       controls.set({ x: 0, y: 0, opacity: 1 })
     }
-  }, [controls, isTopThree, podiumCycleKey, rank])
+  }, [controls, hasMounted, isTopThree, podiumCycleKey, rank])
 
   const animationProps = isTV
     ? {
