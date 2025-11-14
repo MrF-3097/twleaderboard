@@ -42,22 +42,22 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
         
         <div className="flex-1 flex flex-col justify-center min-h-0 gap-3">
           {/* Progress Bar Container */}
-          <div className="relative w-full">
+          <div className="relative w-full tv-progress-wrapper">
             {/* Background track */}
-            <div className={`h-12 ${trackBg} rounded-full overflow-hidden relative`}>
+            <div className={`h-12 ${trackBg} rounded-full overflow-hidden relative tv-progress-track`}>
               {/* Ambient glow on track */}
-              <div className="absolute inset-0 animate-track-glow pointer-events-none" />
+              <div className="absolute inset-0 animate-track-glow pointer-events-none tv-progress-glow" />
               {/* Animated gradient progress bar */}
               <motion.div
-                className="h-full rounded-full relative overflow-hidden"
+                className="h-full rounded-full relative overflow-hidden tv-progress-fill"
                 key={totalCommission}
                 initial={{ width: 0 }}
                 animate={{ width: `${displayedWidth}%` }}
                 style={{ width: `${displayedWidth}%`, minWidth: displayedWidth > 0 ? '2%' : '0%' }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] animate-flow-gradient" />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine-sweep" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] animate-flow-gradient tv-progress-fill-gradient" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine-sweep tv-progress-shine" />
               </motion.div>
               
               {/* Progress percentage text overlay */}

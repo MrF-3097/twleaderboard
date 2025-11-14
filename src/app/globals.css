@@ -132,12 +132,28 @@ body {
 @media (pointer: coarse) {
   * {
     transition-duration: 0.2s !important;
-    animation-duration: 0.2s !important;
   }
   
   /* Disable hover effects on TV */
   *:hover {
     transform: none !important;
+  }
+
+  /* Simplify progress bar visuals for TV browsers to ensure visibility */
+  .tv-progress-track .tv-progress-glow {
+    display: none;
+  }
+
+  .tv-progress-fill {
+    animation: none !important;
+    background: linear-gradient(90deg, #FFD700, #FFB347) !important;
+  }
+
+  .tv-progress-fill-gradient,
+  .tv-progress-shine {
+    animation: none !important;
+    background-size: 100% 100% !important;
+    opacity: 0.9;
   }
 }
 
