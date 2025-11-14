@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Target } from 'lucide-react'
 import type { Agent } from '@/types'
@@ -12,6 +12,7 @@ interface MonthlyGoalProgressProps {
 
 const MONTHLY_GOAL = 30000 // 30,000 EUR
 const LOOP_DURATION_MS = 30000
+const REFILL_DELAY_MS = 2000
 
 export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents }) => {
   const { isDarkMode } = useThemeContext()
@@ -22,26 +23,42 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
     0
   )
 
-  const [loopProgress, setLoopProgress] = useState(0)
+  const [loopProgress, setLoopProgress] = useState(1)
+  const [isRefilling, setIsRefilling] = useState(true)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.requestAnimationFrame === 'undefined') {
+    if (typeof window === 'undefined') {
       return undefined
     }
 
-    let frameId = 0
-    const startTime = window.performance.now()
+    let intervalId: ReturnType<typeof setInterval> | null = null
 
-    const tick = () => {
-      const now = window.performance.now()
-      const elapsed = (now - startTime) % LOOP_DURATION_MS
-      setLoopProgress(elapsed / LOOP_DURATION_MS)
-      frameId = window.requestAnimationFrame(tick)
+    const startCycle = () => {
+      setIsRefilling(false)
+      setLoopProgress(0)
+
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        setIsRefilling(true)
+        setLoopProgress(1)
+      }, REFILL_DELAY_MS)
     }
 
-    frameId = window.requestAnimationFrame(tick)
+    startCycle()
+    intervalId = setInterval(startCycle, LOOP_DURATION_MS)
 
-    return () => window.cancelAnimationFrame(frameId)
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId)
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
   }, [])
 
   // Calculate progress percentage (can exceed 100%)
@@ -49,7 +66,13 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
   const progressWidth = Math.min(progressPercentage, 100)
   const minVisibleWidth = 4
   const displayedWidth = progressWidth <= 0 ? minVisibleWidth : progressWidth
-  const loopWidth = Math.max(minVisibleWidth, loopProgress * 100)
+  const loopWidth = useMemo(() => {
+    const percentage = loopProgress * 100
+    if (isRefilling) {
+      return displayedWidth
+    }
+    return Math.max(minVisibleWidth, percentage)
+  }, [displayedWidth, isRefilling, loopProgress, minVisibleWidth])
   const remaining = Math.max(MONTHLY_GOAL - totalCommission, 0)
   
   const textColor = isDarkMode ? 'text-white' : 'text-slate-900'
@@ -76,7 +99,7 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
                 style={{
                   width: `${loopWidth}%`,
                   minWidth: `${minVisibleWidth}%`,
-                  transition: 'width 0.3s linear',
+                  transition: isRefilling ? 'width 0.8s ease-out' : 'width 0.4s ease-in',
                 }}
               />
               
