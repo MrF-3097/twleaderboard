@@ -108,7 +108,7 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
         },
       })
 
-      if (isCancelled) {
+      if (isCancelled || !hasMounted) {
         return
       }
 
