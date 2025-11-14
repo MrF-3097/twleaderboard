@@ -133,7 +133,6 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
     return () => {
       isCancelled = true
       controls.stop()
-      controls.set({ x: 0, y: 0, opacity: 1 })
     }
   }, [controls, hasMounted, isTopThree, podiumCycleKey, rank])
 
