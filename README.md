@@ -172,3 +172,5 @@ For TV display deployment:
 
 **Francesco 14.11.2025**: Reintroduced motion by animating the monthly goal progress bar so it fully drains every 30 seconds, pauses empty for two seconds, then refills to the true commission value. Added a repeating minute-based podium flourish where the top three agent cards glide off-screen to the right in order and spring back from the top with staggered inertia, keeping the leaderboard lively during long-running TV sessions.
 
+**Francesco 15.11.2025**: Softened the light-mode experience by switching the global background, card, and popover colors to `#F8F8FF`, matching the TV display’s airy palette while maintaining contrast for stats and leaderboard columns.
+
