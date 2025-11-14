@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useState, useEffect } from 'react'
+import { memo, useState, useEffect, useRef } from 'react'
 import { motion, useAnimationControls } from 'framer-motion'
 import { TrendingUp, TrendingDown, Trophy, Award } from 'lucide-react'
 import { useThemeContext } from '@/contexts/theme-context'
@@ -55,7 +55,7 @@ const getRankBackground = (rank: number, isDarkMode: boolean) => {
 const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, rankChange, scale = 1, podiumCycleKey }) => {
   const { isDarkMode } = useThemeContext()
   const [imageError, setImageError] = useState(false)
-  const [hasMounted, setHasMounted] = useState(false)
+  const hasMountedRef = useRef(false)
   const rank = agent.rank || index + 1
   const isTopThree = rank <= 3
   const isFourthOrBelow = rank >= 4
@@ -75,21 +75,24 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
   const borderColor = isDarkMode ? 'border-white/20' : 'border-slate-300'
 
   useEffect(() => {
-    setHasMounted(true)
+    hasMountedRef.current = true
+    return () => {
+      hasMountedRef.current = false
+    }
   }, [])
 
   // Optimized animations for TV - simpler and faster
   const controls = useAnimationControls()
 
   useEffect(() => {
-    if (!hasMounted || !isTopThree || isTV) {
+    if (!hasMountedRef.current || !isTopThree || isTV) {
       return
     }
     controls.set({ x: 0, y: 0, opacity: 1 })
-  }, [controls, hasMounted, isTopThree])
+  }, [controls, isTopThree])
 
   useEffect(() => {
-    if (!hasMounted || !isTopThree || typeof podiumCycleKey === 'undefined' || isTV) {
+    if (!hasMountedRef.current || !isTopThree || typeof podiumCycleKey === 'undefined' || isTV) {
       return
     }
 
@@ -108,7 +111,7 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
         },
       })
 
-      if (isCancelled || !hasMounted) {
+      if (isCancelled || !hasMountedRef.current) {
         return
       }
 
@@ -134,7 +137,7 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
       isCancelled = true
       controls.stop()
     }
-  }, [controls, hasMounted, isTopThree, podiumCycleKey, rank])
+  }, [controls, isTopThree, podiumCycleKey, rank])
 
   const animationProps = isTV
     ? {
