@@ -128,17 +128,25 @@ export const GamifiedLeaderboard: React.FC = () => {
   const [podiumCycleKey, setPodiumCycleKey] = useState(0)
 
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>
-
-    const scheduleCycle = () => {
-      setPodiumCycleKey((prev) => prev + 1)
-      timeoutId = setTimeout(scheduleCycle, PODIUM_LOOP_INTERVAL)
+    if (typeof window === 'undefined') {
+      return
     }
 
-    timeoutId = setTimeout(scheduleCycle, PODIUM_LOOP_INTERVAL)
+    let rafId = 0
+    let lastTrigger = window.performance.now()
+
+    const loop = (timestamp: number) => {
+      if (timestamp - lastTrigger >= PODIUM_LOOP_INTERVAL) {
+        setPodiumCycleKey((prev) => prev + 1)
+        lastTrigger = timestamp
+      }
+      rafId = window.requestAnimationFrame(loop)
+    }
+
+    rafId = window.requestAnimationFrame(loop)
 
     return () => {
-      clearTimeout(timeoutId)
+      window.cancelAnimationFrame(rafId)
     }
   }, [])
 
