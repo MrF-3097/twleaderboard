@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Trophy, RefreshCcw } from 'lucide-react'
 import { useAgentLeaderboard } from '@/hooks/use-agent-leaderboard'
 import { AgentCard } from './agent-card'
 import { AgentDetailModal } from './agent-detail-modal'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { playSound } from '@/lib/sounds'
 import { useThemeContext } from '@/contexts/theme-context'
@@ -223,34 +222,6 @@ export const GamifiedLeaderboard: React.FC = () => {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Error Banner - Show when error but we have cached data */}
-      {error && agents.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-2xl bg-yellow-500/10 border border-yellow-500/50"
-        >
-          <div className="relative z-10 p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <RefreshCcw className="h-4 w-4 text-yellow-400 animate-spin" />
-                <p className="text-yellow-400 text-sm font-medium">
-                  Problemă de conexiune - se afișează date din cache
-                </p>
-              </div>
-              <Button
-                onClick={handleRefresh}
-                size="sm"
-                className="bg-transparent hover:bg-yellow-500/20 text-yellow-400 border-yellow-500/50"
-              >
-                Reîncearcă
-              </Button>
-            </div>
-            <p className="text-xs text-yellow-400/70 mt-1">{error}</p>
-          </div>
-        </motion.div>
-      )}
-
       {/* Leaderboard */}
       <div className={`relative overflow-hidden rounded-2xl ${bgColor} flex-1 flex flex-col min-h-0`}>
         <div className="relative z-10 flex flex-col min-h-0">
