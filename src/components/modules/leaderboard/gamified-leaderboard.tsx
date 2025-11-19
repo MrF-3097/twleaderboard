@@ -167,13 +167,24 @@ export const GamifiedLeaderboard: React.FC = () => {
       return !previousChangeMap.has(key)
     })
 
+    // Log rank changes for debugging
+    if (newChanges.length > 0) {
+      console.log('[Leaderboard] Rank changes detected:', newChanges)
+    }
+
     // Play sounds for each new rank change
     newChanges.forEach((change) => {
       if (change.type === 'up') {
         // Small delay to ensure sounds don't overlap too much
-        setTimeout(() => playSound('rank_up'), 0)
+        setTimeout(() => {
+          console.log('[Leaderboard] Playing rank_up sound')
+          playSound('rank_up')
+        }, 0)
       } else if (change.type === 'down') {
-        setTimeout(() => playSound('rank_down'), 50)
+        setTimeout(() => {
+          console.log('[Leaderboard] Playing rank_down sound')
+          playSound('rank_down')
+        }, 50)
       }
     })
     

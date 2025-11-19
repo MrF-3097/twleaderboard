@@ -1,14 +1,40 @@
 'use client'
 
+import { useEffect } from 'react'
 import { GamifiedLeaderboard } from '@/components/modules/leaderboard/gamified-leaderboard'
 import { StatsOverview } from '@/components/modules/stats/stats-overview'
 import { useAgentLeaderboard } from '@/hooks/use-agent-leaderboard'
 import { ThemeProvider, useThemeContext } from '@/contexts/theme-context'
+import { unlockAudio } from '@/lib/sounds'
 
 const POLLING_INTERVAL = 5000
 
 function TVDisplayContent({ stats, agents }: { stats: any, agents: any }) {
   const { isDarkMode } = useThemeContext()
+
+  // Unlock audio on page load and first user interaction
+  useEffect(() => {
+    // Try to unlock immediately
+    unlockAudio()
+
+    // Also unlock on first user interaction (click, touch, keydown)
+    const unlockOnInteraction = () => {
+      unlockAudio()
+      document.removeEventListener('click', unlockOnInteraction)
+      document.removeEventListener('touchstart', unlockOnInteraction)
+      document.removeEventListener('keydown', unlockOnInteraction)
+    }
+
+    document.addEventListener('click', unlockOnInteraction, { once: true })
+    document.addEventListener('touchstart', unlockOnInteraction, { once: true })
+    document.addEventListener('keydown', unlockOnInteraction, { once: true })
+
+    return () => {
+      document.removeEventListener('click', unlockOnInteraction)
+      document.removeEventListener('touchstart', unlockOnInteraction)
+      document.removeEventListener('keydown', unlockOnInteraction)
+    }
+  }, [])
 
   return (
     <main className={`h-screen w-screen overflow-hidden transition-colors duration-500 ${
@@ -32,7 +58,7 @@ function TVDisplayContent({ stats, agents }: { stats: any, agents: any }) {
         </div>
 
         {/* Column 2: Leaderboard */}
-        <div className="w-[70%] h-full flex flex-col" style={{ paddingLeft: '50px', paddingTop: '10px' }}>
+        <div className="w-[70%] h-full flex flex-col" style={{ paddingLeft: '50px' }}>
           <GamifiedLeaderboard />
         </div>
       </div>
