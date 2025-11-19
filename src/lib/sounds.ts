@@ -1,5 +1,34 @@
 // Smooth, ambient sound effect utilities for gamified leaderboard
 
+// Cache for the rank change audio to avoid reloading on each play
+let rankChangeAudio: HTMLAudioElement | null = null
+
+/**
+ * Load and play the rank change MP3 file.
+ * Uses HTML5 Audio API for better compatibility and simpler playback.
+ */
+const playRankChangeSound = () => {
+  if (typeof window === 'undefined') return
+
+  try {
+    // Create audio element if it doesn't exist
+    if (!rankChangeAudio) {
+      rankChangeAudio = new Audio('/rank-change.mp3')
+      rankChangeAudio.preload = 'auto'
+      rankChangeAudio.volume = 1.0 // Full volume, adjust if needed
+    }
+
+    // Reset and play the sound
+    rankChangeAudio.currentTime = 0
+    rankChangeAudio.play().catch((error) => {
+      // Silently fail if autoplay is blocked (browser requires user interaction)
+      console.warn('[Sounds] Could not play rank change sound:', error)
+    })
+  } catch (error) {
+    console.error('[Sounds] Error playing rank change sound:', error)
+  }
+}
+
 // Helper to create an ambient pad sound
 const createAmbientPad = (
   audioContext: AudioContext,
@@ -92,6 +121,13 @@ const createSwoosh = (
 export const playSound = (type: 'rank_up' | 'rank_down' | 'achievement' | 'confetti') => {
   if (typeof window === 'undefined') return
 
+  // Handle rank changes with MP3 file (no AudioContext needed)
+  if (type === 'rank_up' || type === 'rank_down') {
+    playRankChangeSound()
+    return
+  }
+
+  // For other sounds, use Web Audio API
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
   
   // Resume audio context if suspended (browsers suspend until user interaction)
@@ -104,18 +140,6 @@ export const playSound = (type: 'rank_up' | 'rank_down' | 'achievement' | 'confe
   const now = audioContext.currentTime
 
   switch (type) {
-    case 'rank_up':
-      // Smooth upward swoosh - like a gentle breeze lifting up
-      createSwoosh(audioContext, 200, 400, now, 0.6, 0.025, 'up')
-      // Add subtle ambient pad for warmth
-      createAmbientPad(audioContext, 329.63, now + 0.2, 0.5, 0.015) // E4
-      break
-
-    case 'rank_down':
-      // Gentle downward drift - calming and neutral
-      createSwoosh(audioContext, 350, 200, now, 0.7, 0.02, 'down')
-      createAmbientPad(audioContext, 261.63, now + 0.1, 0.6, 0.012) // C4
-      break
 
     case 'achievement':
       // Warm, ambient celebration - like a soft glow
