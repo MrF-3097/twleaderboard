@@ -233,6 +233,13 @@ export const GamifiedLeaderboard: React.FC = () => {
 
   return (
     <div className="space-y-4 md:space-y-6">
+      {/* Leaderboard Title */}
+      <div className="text-center">
+        <h2 className={`text-5xl font-bold ${textColor} tracking-wide`}>
+          Valoare Comision Lunar
+        </h2>
+      </div>
+      
       {/* Leaderboard */}
       <div className={`relative overflow-hidden rounded-2xl ${bgColor} flex-1 flex flex-col min-h-0`}>
         <div className="relative z-10 flex flex-col min-h-0">
