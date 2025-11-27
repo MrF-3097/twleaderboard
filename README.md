@@ -109,7 +109,7 @@ src/
 ### External API (Primary)
 The application fetches leaderboard data from the main Agent Dashboard API:
 
-- **Endpoint**: `http://185.92.192.127:3000/api/leaderboard`
+- **Endpoint**: `http://185.92.192.127:3001/api/leaderboard`
 - **Method**: GET
 - **Polling Interval**: 5 seconds (matches API cache duration)
 - **Features**:
@@ -136,7 +136,7 @@ The application uses SQLite for local data storage. The database file is located
 
 ### Environment Variables
 
-- `NEXT_PUBLIC_LEADERBOARD_API_URL` - Override the external leaderboard API URL (default: `http://185.92.192.127:3000/api/leaderboard`)
+- `NEXT_PUBLIC_LEADERBOARD_API_URL` - Override the external leaderboard API URL (default: `http://185.92.192.127:3001/api/leaderboard`)
 - `REBS_API_KEY` - REBS CRM API key (optional, defaults to hardcoded key but should be set via environment variable for security)
 - `REBS_API_BASE` - REBS CRM API base URL (optional, defaults to `https://towerimob.crmrebs.com/api/public`)
 

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
  * Proxy route for external leaderboard API
  * This avoids CORS issues by fetching from the server side
  */
-const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_LEADERBOARD_API_URL || 'http://185.92.192.127:3000/api/leaderboard'
+const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_LEADERBOARD_API_URL || 'http://185.92.192.127:3001/api/leaderboard'
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,8 +27,6 @@ export async function GET(request: NextRequest) {
     const apiUrl = queryParams.toString()
       ? `${EXTERNAL_API_URL}?${queryParams.toString()}`
       : EXTERNAL_API_URL
-
-    console.log('[Proxy] Fetching from:', apiUrl)
 
     // Get ETag from request headers
     const ifNoneMatch = request.headers.get('if-none-match')
@@ -56,12 +54,23 @@ export async function GET(request: NextRequest) {
     // Check if response is successful
     if (!response.ok) {
       const errorText = await response.text()
-      console.error(`[Proxy] API returned ${response.status}:`, errorText.substring(0, 500))
+      
+      // Only log the first error or periodically to reduce spam
+      const shouldLogError = Math.random() < 0.1 // Log 10% of errors to reduce spam
+      if (shouldLogError || response.status === 404) {
+        console.error(`[Proxy] API returned ${response.status} from ${apiUrl}`)
+        if (response.status === 404) {
+          console.error(`[Proxy] ⚠️  Endpoint not found. Check if API URL is correct: ${EXTERNAL_API_URL}`)
+          console.error(`[Proxy] Set NEXT_PUBLIC_LEADERBOARD_API_URL environment variable if path is different`)
+        }
+      }
+      
       return NextResponse.json(
         {
           success: false,
           error: `API returned ${response.status}: ${response.statusText}`,
           message: 'External API error',
+          endpoint: apiUrl,
         },
         { status: response.status }
       )
@@ -104,13 +113,18 @@ export async function GET(request: NextRequest) {
 
     return nextResponse
   } catch (error) {
-    console.error('[Proxy] Error fetching external leaderboard:', error)
+    // Throttle error logging to reduce spam (log only 10% of errors)
+    if (Math.random() < 0.1) {
+      console.error('[Proxy] Error fetching external leaderboard:', error)
+      console.error(`[Proxy] Attempted URL: ${EXTERNAL_API_URL}`)
+    }
     
     return NextResponse.json(
       {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to fetch leaderboard',
         message: 'Network error connecting to external API',
+        endpoint: EXTERNAL_API_URL,
       },
       { status: 500 }
     )

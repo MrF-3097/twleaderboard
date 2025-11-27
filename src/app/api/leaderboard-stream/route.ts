@@ -10,7 +10,7 @@ export const runtime = 'nodejs'
  */
 // Use proxy route first, fallback to direct API
 const PROXY_API_URL = '/api/leaderboard-proxy'
-const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_LEADERBOARD_API_URL || 'http://185.92.192.127:3000/api/leaderboard'
+const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_LEADERBOARD_API_URL || 'http://185.92.192.127:3001/api/leaderboard'
 const POLLING_INTERVAL = 1000 // Poll every 1 second for instant updates
 const MAX_RECONNECT_DELAY = 30000 // Max 30 seconds between reconnects
 
@@ -25,6 +25,9 @@ export async function GET(request: NextRequest) {
       let isActive = true
       let keepAliveInterval: NodeJS.Timeout | null = null
       const origin = request.nextUrl.origin
+      let consecutiveErrors = 0
+      let lastErrorLogTime = 0
+      const ERROR_LOG_INTERVAL_MS = 30000 // Log errors at most once per 30 seconds
 
       // Send initial connection message
       const sendMessage = (data: string, event: string = 'message') => {
@@ -113,13 +116,29 @@ export async function GET(request: NextRequest) {
 
           // Handle non-OK responses
           if (!response.ok) {
+            consecutiveErrors++
             // If we have cached data, don't overwrite it with error
             if (lastData) {
-              console.warn(`[SSE] API returned ${response.status}, using cached data`)
+              // Only log occasionally when using cached data
+              if (consecutiveErrors % 30 === 0) {
+                console.warn(`[SSE] API returned ${response.status}, using cached data (${consecutiveErrors} consecutive errors)`)
+              }
               return
             }
-            const errorText = await response.text().catch(() => 'Unknown error')
-            console.error(`[SSE] API error ${response.status}:`, errorText.substring(0, 200))
+            
+            // Throttle error logging to reduce spam
+            const now = Date.now()
+            const shouldLog = now - lastErrorLogTime > ERROR_LOG_INTERVAL_MS || consecutiveErrors === 1
+            if (shouldLog) {
+              const errorText = await response.text().catch(() => 'Unknown error')
+              console.error(`[SSE] API error ${response.status} (${consecutiveErrors} consecutive errors):`, errorText.substring(0, 200))
+              if (response.status === 404) {
+                console.error(`[SSE] ⚠️  Endpoint not found. Check if API URL is correct: ${EXTERNAL_API_URL}`)
+                console.error(`[SSE] Set NEXT_PUBLIC_LEADERBOARD_API_URL environment variable if path is different`)
+              }
+              lastErrorLogTime = now
+            }
+            
             sendMessage(
               JSON.stringify({
                 error: `API returned ${response.status}: ${response.statusText}`,
@@ -128,6 +147,9 @@ export async function GET(request: NextRequest) {
             )
             return
           }
+          
+          // Reset error counter on success
+          consecutiveErrors = 0
 
           // Handle 304 Not Modified
           if (response.status === 304) {
