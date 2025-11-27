@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 const REBS_API_BASE = process.env.REBS_API_BASE || 'https://towerimob.crmrebs.com/api/public'
-const REBS_API_KEY = process.env.REBS_API_KEY || 'ee93793d23fb4cdfc27e581a300503bda245b7c8'
+const REBS_API_KEY = process.env.REBS_API_KEY || '303ea2a1928b789d9f4b011aecfe12199098b2fd'
 const USE_MOCK_DATA = false // Using real REBS API now
 
 /**
