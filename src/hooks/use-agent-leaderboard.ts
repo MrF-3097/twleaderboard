@@ -4,6 +4,11 @@ import { useLeaderboardStream } from './use-leaderboard-stream'
 import type { ExternalAgent, ExternalStats } from '@/types/external-api'
 
 const MIN_VISIBLE_AGENTS = 10
+const REBS_AGENTS_CACHE_KEY = 'rebs_agents_cache'
+const REBS_AGENTS_CACHE_TIMESTAMP_KEY = 'rebs_agents_cache_timestamp'
+const REBS_CACHE_DURATION_MS = 24 * 60 * 60 * 1000 // 24 hours cache
+const REBS_FETCH_RETRIES = 3
+const REBS_FETCH_RETRY_DELAY_MS = 2000 // 2 seconds between retries
 
 interface UseAgentLeaderboardReturn {
   agents: Agent[]
@@ -178,31 +183,134 @@ export const useAgentLeaderboard = (
   } = useLeaderboardStream()
 
   /**
-   * Fetch REBS agents for avatar enrichment
+   * Load REBS agents from localStorage cache
+   */
+  const loadRebsAgentsFromCache = useCallback((): RebsAgent[] => {
+    if (typeof window === 'undefined') return []
+    
+    try {
+      const cachedData = localStorage.getItem(REBS_AGENTS_CACHE_KEY)
+      const cachedTimestamp = localStorage.getItem(REBS_AGENTS_CACHE_TIMESTAMP_KEY)
+      
+      if (!cachedData || !cachedTimestamp) return []
+      
+      const timestamp = parseInt(cachedTimestamp, 10)
+      const now = Date.now()
+      
+      // Check if cache is still valid (within 24 hours)
+      if (now - timestamp < REBS_CACHE_DURATION_MS) {
+        const agents = JSON.parse(cachedData)
+        console.log(`[REBS] Loaded ${agents.length} agents from cache (age: ${Math.round((now - timestamp) / 1000 / 60)} minutes)`)
+        return agents
+      } else {
+        console.log('[REBS] Cache expired, will fetch fresh data')
+        // Clear expired cache
+        localStorage.removeItem(REBS_AGENTS_CACHE_KEY)
+        localStorage.removeItem(REBS_AGENTS_CACHE_TIMESTAMP_KEY)
+        return []
+      }
+    } catch (err) {
+      console.error('[REBS] Error loading from cache:', err)
+      return []
+    }
+  }, [])
+
+  /**
+   * Save REBS agents to localStorage cache
+   */
+  const saveRebsAgentsToCache = useCallback((agents: RebsAgent[]) => {
+    if (typeof window === 'undefined') return
+    
+    try {
+      localStorage.setItem(REBS_AGENTS_CACHE_KEY, JSON.stringify(agents))
+      localStorage.setItem(REBS_AGENTS_CACHE_TIMESTAMP_KEY, Date.now().toString())
+      console.log(`[REBS] Saved ${agents.length} agents to cache`)
+    } catch (err) {
+      console.error('[REBS] Error saving to cache:', err)
+      // If localStorage is full, try to clear old cache
+      try {
+        localStorage.removeItem(REBS_AGENTS_CACHE_KEY)
+        localStorage.removeItem(REBS_AGENTS_CACHE_TIMESTAMP_KEY)
+        localStorage.setItem(REBS_AGENTS_CACHE_KEY, JSON.stringify(agents))
+        localStorage.setItem(REBS_AGENTS_CACHE_TIMESTAMP_KEY, Date.now().toString())
+        console.log('[REBS] Cleared old cache and saved new data')
+      } catch (clearErr) {
+        console.error('[REBS] Failed to save to cache even after clearing:', clearErr)
+      }
+    }
+  }, [])
+
+  /**
+   * Fetch REBS agents for avatar enrichment with retry logic and caching
    */
   useEffect(() => {
-    const fetchRebsAgents = async () => {
+    // Load from cache immediately on mount
+    const cachedAgents = loadRebsAgentsFromCache()
+    if (cachedAgents.length > 0) {
+      rebsAgentsRef.current = cachedAgents
+      setRebsAgentsLoaded(true)
+      console.log(`[REBS] Using cached agents (${cachedAgents.length} agents)`)
+    }
+
+    const fetchRebsAgents = async (retryCount = 0): Promise<void> => {
       try {
         const response = await fetch('/api/rebs-agents')
         const result = await response.json()
         
-        if (result.success && result.data && Array.isArray(result.data)) {
+        if (result.success && result.data && Array.isArray(result.data) && result.data.length > 0) {
           rebsAgentsRef.current = result.data
+          saveRebsAgentsToCache(result.data)
           setRebsAgentsLoaded(true)
           console.log(`[REBS] Loaded ${result.data.length} agents for avatar enrichment`)
+          return
+        } else if (result.success && result.data && Array.isArray(result.data) && result.data.length === 0) {
+          // Empty response - might be a temporary issue, but don't overwrite cache with empty data
+          console.warn('[REBS] Received empty agent list from API, keeping cache if available')
+          if (rebsAgentsRef.current.length === 0) {
+            setRebsAgentsLoaded(true)
+          }
+          return
         }
+        
+        // If API returned unsuccessful or no data, try retry
+        throw new Error('Invalid response from REBS API')
       } catch (err) {
-        console.error('[REBS] Error fetching agents for avatars:', err)
-        // Don't fail the whole app if REBS fetch fails
+        console.error(`[REBS] Error fetching agents for avatars (attempt ${retryCount + 1}/${REBS_FETCH_RETRIES}):`, err)
+        
+        // Retry logic
+        if (retryCount < REBS_FETCH_RETRIES - 1) {
+          console.log(`[REBS] Retrying in ${REBS_FETCH_RETRY_DELAY_MS / 1000} seconds...`)
+          setTimeout(() => {
+            fetchRebsAgents(retryCount + 1)
+          }, REBS_FETCH_RETRY_DELAY_MS)
+          return
+        }
+        
+        // All retries failed - if we have cached data, use it, otherwise mark as loaded anyway
+        if (rebsAgentsRef.current.length === 0) {
+          console.warn('[REBS] All fetch attempts failed and no cache available')
+        } else {
+          console.log('[REBS] Using cached data after fetch failure')
+        }
         setRebsAgentsLoaded(true)
       }
     }
 
-    // Fetch REBS agents once on mount
-    if (!rebsAgentsLoaded) {
+    // Always try to fetch fresh data in background (unless we're already loaded and cache is fresh)
+    const cachedTimestamp = typeof window !== 'undefined' ? localStorage.getItem(REBS_AGENTS_CACHE_TIMESTAMP_KEY) : null
+    const shouldFetchFresh = !cachedTimestamp || (Date.now() - parseInt(cachedTimestamp, 10)) > (REBS_CACHE_DURATION_MS / 2) // Fetch if cache is older than 12 hours
+    
+    if (shouldFetchFresh) {
+      fetchRebsAgents()
+    } else if (cachedAgents.length > 0) {
+      // Cache is fresh enough, just mark as loaded
+      setRebsAgentsLoaded(true)
+    } else {
+      // No cache and should fetch
       fetchRebsAgents()
     }
-  }, [rebsAgentsLoaded])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run once on mount
 
   /**
    * Match REBS agent with leaderboard agent by name
@@ -306,23 +414,30 @@ export const useAgentLeaderboard = (
     )
 
     const fallbackAgents: Agent[] = []
-    if (actualAgentsSorted.length < MIN_VISIBLE_AGENTS) {
+    // Only create fallback agents if we have REBS data loaded, or if we're still loading and have cached data
+    // This prevents creating "Agent necunoscut" placeholders when REBS data is still loading
+    if (actualAgentsSorted.length < MIN_VISIBLE_AGENTS && (rebsAgentsLoaded || rebsAgentsRef.current.length > 0)) {
       const needed = MIN_VISIBLE_AGENTS - actualAgentsSorted.length
 
-      const rebsFallback = rebsAgentsRef.current
-        .filter(rebsAgent => {
-          const name = getRebsFullName(rebsAgent).toLowerCase().trim()
-          if (!name) return false
-          return !existingNameSet.has(name)
-        })
-        .sort((a, b) => getRebsFullName(a).localeCompare(getRebsFullName(b)))
-        .map((agent, index) => createFallbackAgentFromRebs(agent, index))
+      // Only use REBS agents for fallback if we have them loaded
+      if (rebsAgentsRef.current.length > 0) {
+        const rebsFallback = rebsAgentsRef.current
+          .filter(rebsAgent => {
+            const name = getRebsFullName(rebsAgent).toLowerCase().trim()
+            if (!name) return false
+            return !existingNameSet.has(name)
+          })
+          .sort((a, b) => getRebsFullName(a).localeCompare(getRebsFullName(b)))
+          .map((agent, index) => createFallbackAgentFromRebs(agent, index))
 
-      for (const fallback of rebsFallback) {
-        fallbackAgents.push(fallback)
-        if (fallbackAgents.length >= needed) break
+        for (const fallback of rebsFallback) {
+          fallbackAgents.push(fallback)
+          if (fallbackAgents.length >= needed) break
+        }
       }
 
+      // Only create placeholder agents if we absolutely can't fill with REBS agents
+      // This should rarely happen if REBS data is properly loaded
       let placeholderIndex = 1
       while (fallbackAgents.length < needed) {
         fallbackAgents.push(
@@ -353,7 +468,7 @@ export const useAgentLeaderboard = (
     } else if (!isLoading && combinedAgents.length === 0) {
       setStats(null)
     }
-  }, [mappedAgents, externalStats, isLoading, detectRankChanges, findRebsAgent])
+  }, [mappedAgents, externalStats, isLoading, detectRankChanges, findRebsAgent, rebsAgentsLoaded])
 
   /**
    * Manual refetch function

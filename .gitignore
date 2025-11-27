@@ -36,6 +36,9 @@ yarn-error.log*
 next-env.d.ts
 
 # database
-/data/*.sqlite
-/data/*.sqlite-journal
+/data/
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
 
