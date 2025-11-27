@@ -134,4 +134,8 @@ export const playSound = (type: 'rank_up' | 'rank_down' | 'achievement' | 'confe
   // This ensures ONLY the MP3 bell sound plays on transactions
 }
 
+export const playCelebration = () => {
+  playSound('confetti')
+  setTimeout(() => playSound('achievement'), 150)
+}
 
