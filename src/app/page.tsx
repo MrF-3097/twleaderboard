@@ -58,7 +58,7 @@ function TVDisplayContent({ stats, agents }: { stats: any, agents: any }) {
         </div>
 
         {/* Column 2: Leaderboard */}
-        <div className="w-[70%] h-full flex flex-col" style={{ paddingLeft: '50px' }}>
+        <div className="w-[70%] flex flex-col" style={{ paddingLeft: '50px' }}>
           <GamifiedLeaderboard />
         </div>
       </div>
