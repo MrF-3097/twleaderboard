@@ -37,12 +37,13 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents }) =
       </div>
 
       {/* Row 2: Total Transactions and Total Commission */}
-      <div className="flex-shrink-0 flex gap-6" style={{ height: '20%', marginTop: '20px', paddingTop: '100px' }}>
+      <div className="flex-shrink-0 flex gap-6" style={{ height: '20%', marginTop: '20px' }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className={`flex-1 relative overflow-hidden rounded-2xl bg-transparent border ${borderColor} p-4 transition-all duration-300 ${isDarkMode ? 'hover:border-white/30' : 'hover:border-slate-400'}`}
+          style={{ marginTop: '100px' }}
         >
           <div className="flex flex-col h-full justify-start">
             <div className="flex items-center justify-between mb-1">
@@ -62,6 +63,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents }) =
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className={`flex-1 relative overflow-hidden rounded-2xl bg-transparent border ${borderColor} p-4 transition-all duration-300 ${isDarkMode ? 'hover:border-white/30' : 'hover:border-slate-400'}`}
+          style={{ marginTop: '100px' }}
         >
           <div className="flex flex-col h-full justify-start">
             <div className="flex items-center justify-between mb-1">
