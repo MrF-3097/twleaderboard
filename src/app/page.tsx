@@ -37,7 +37,7 @@ function TVDisplayContent({ stats, agents }: { stats: any, agents: any }) {
   }, [])
 
   return (
-    <main className={`h-screen w-screen transition-colors duration-500 ${
+    <main className={`min-h-screen w-screen transition-colors duration-500 ${
       isDarkMode ? 'bg-[#1F2933]' : 'bg-[#F8FAFC]'
     }`}>
       <div 
@@ -45,7 +45,7 @@ function TVDisplayContent({ stats, agents }: { stats: any, agents: any }) {
         style={{ 
           marginTop: '3%', 
           marginBottom: '-20%', 
-          height: '115%',
+          minHeight: '115%',
           paddingLeft: '4%',
           paddingRight: '4%',
           paddingBottom: '-20%',
@@ -53,7 +53,7 @@ function TVDisplayContent({ stats, agents }: { stats: any, agents: any }) {
         }}
       >
         {/* Column 1: Stats (2 rows) */}
-        <div className="w-[30%] h-full flex flex-col">
+        <div className="w-[30%] flex flex-col">
           <StatsOverview stats={stats} agents={agents} />
         </div>
 
