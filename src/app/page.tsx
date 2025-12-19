@@ -39,7 +39,7 @@ function TVDisplayContent({ stats, agents }: { stats: any, agents: any }) {
   return (
     <main className={`min-h-screen w-screen transition-colors duration-500 ${
       isDarkMode ? 'bg-[#1F2933]' : 'bg-[#F8FAFC]'
-    }`} style={{ overflowY: 'hidden', overflowX: 'hidden' }}>
+    }`}>
       <div 
         className="w-full flex" 
         style={{ 
