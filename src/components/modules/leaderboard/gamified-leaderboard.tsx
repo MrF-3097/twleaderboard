@@ -263,7 +263,7 @@ export const GamifiedLeaderboard: React.FC = () => {
                 {/* React will just reorder existing elements instead of creating new ones */}
                       {agents.map((agent, index) => {
                   const rankChange = rankChanges.find((rc) => rc.agentId === agent.id)
-                  const isVisible = index < 10 // Show first 10, hide rest but keep in DOM
+                  const isVisible = index < 11 // Show first 11, 11th goes off-screen
                          const agentRank = agent.rank ?? index + 1
                   
                   return (
