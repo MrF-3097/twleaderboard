@@ -32,7 +32,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents }) =
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Row 1: Clock */}
-      <div className="flex-shrink-0" style={{ height: '34%' }}>
+      <div className="flex-shrink-0" style={{ height: '34%', paddingTop: '100px' }}>
         <Clock />
       </div>
 
@@ -43,7 +43,6 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents }) =
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className={`flex-1 relative overflow-hidden rounded-2xl bg-transparent border ${borderColor} p-4 transition-all duration-300 ${isDarkMode ? 'hover:border-white/30' : 'hover:border-slate-400'}`}
-          style={{ marginTop: '100px' }}
         >
           <div className="flex flex-col h-full justify-start">
             <div className="flex items-center justify-between mb-1">
@@ -63,7 +62,6 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents }) =
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className={`flex-1 relative overflow-hidden rounded-2xl bg-transparent border ${borderColor} p-4 transition-all duration-300 ${isDarkMode ? 'hover:border-white/30' : 'hover:border-slate-400'}`}
-          style={{ marginTop: '100px' }}
         >
           <div className="flex flex-col h-full justify-start">
             <div className="flex items-center justify-between mb-1">
