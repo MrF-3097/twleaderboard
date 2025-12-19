@@ -259,11 +259,10 @@ export const GamifiedLeaderboard: React.FC = () => {
                 style={{ gap: '4px', paddingTop: `${15 * scale}px`, paddingBottom: `${15 * scale}px` }} 
                 className="flex flex-col"
               >
-                {/* Render first 11 agents - 11th will extend beyond viewport */}
+                {/* Render all agents - leaderboard extends to show all */}
                 {(() => {
-                  const agentsToRender = agents.slice(0, 11)
-                  console.log('[Leaderboard] Rendering agents:', agentsToRender.length, 'Total available:', agents.length)
-                  return agentsToRender.map((agent, index) => {
+                  console.log('[Leaderboard] Rendering all agents:', agents.length)
+                  return agents.map((agent, index) => {
                   const rankChange = rankChanges.find((rc) => rc.agentId === agent.id)
                   const agentRank = agent.rank ?? index + 1
                   
