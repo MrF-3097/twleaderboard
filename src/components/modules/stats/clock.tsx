@@ -76,10 +76,10 @@ export const Clock: React.FC = () => {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
-      className={`flex-1 relative overflow-hidden rounded-2xl bg-transparent border ${borderColor} p-8 transition-all duration-300 ${isDarkMode ? 'hover:border-white/30' : 'hover:border-slate-400'}`}
-      style={{ paddingTop: '30px' }}
+      className={`flex-1 relative overflow-hidden rounded-2xl bg-transparent border ${borderColor} transition-all duration-300 ${isDarkMode ? 'hover:border-white/30' : 'hover:border-slate-400'}`}
+      style={{ paddingTop: '100px', paddingLeft: '2rem', paddingRight: '2rem', paddingBottom: '2rem' }}
     >
-      <div className="flex flex-col h-full justify-center items-start">
+      <div className="flex flex-col h-full justify-start items-start">
         <div className="flex items-center justify-start mb-4 w-full">
           <ClockIcon className={`${iconColor}`} style={{ width: '2.4rem', height: '2.4rem' }} />
         </div>
