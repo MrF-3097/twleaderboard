@@ -257,22 +257,18 @@ export const GamifiedLeaderboard: React.FC = () => {
             ) : (
               <div 
                 style={{ gap: '4px', paddingTop: `${15 * scale}px`, paddingBottom: `${15 * scale}px` }} 
-                className="flex flex-col"
+                className="flex flex-col min-h-0"
               >
                 {/* Prerender all agents in DOM for smooth reordering when ranks change */}
                 {/* React will just reorder existing elements instead of creating new ones */}
-                      {agents.map((agent, index) => {
+                      {agents.slice(0, 11).map((agent, index) => {
                   const rankChange = rankChanges.find((rc) => rc.agentId === agent.id)
-                  const isVisible = index < 11 // Show first 11 agents, 11th is partially visible and cut off at bottom
-                         const agentRank = agent.rank ?? index + 1
+                  const agentRank = agent.rank ?? index + 1
                   
                   return (
                     <div
                       key={agent.id}
-                      className={isVisible ? '' : 'hidden'}
                       style={{
-                        // Keep all agents in DOM flow for React reconciliation
-                        // Hidden agents are still in DOM but not rendered visually
                         flexShrink: 0,
                       }}
                     >
