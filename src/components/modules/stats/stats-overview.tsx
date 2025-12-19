@@ -37,7 +37,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents }) =
       </div>
 
       {/* Row 2: Total Transactions and Total Commission */}
-      <div className="flex-shrink-0 flex gap-6" style={{ height: '20%', marginTop: '140px' }}>
+      <div className="flex-shrink-0 flex gap-6" style={{ height: '20%', marginTop: '20px' }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
