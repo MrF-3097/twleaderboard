@@ -241,9 +241,9 @@ export const GamifiedLeaderboard: React.FC = () => {
       </div>
       
       {/* Leaderboard */}
-      <div className={`relative rounded-2xl ${bgColor} flex-1 flex flex-col`}>
+      <div className={`relative rounded-2xl ${bgColor} flex flex-col`}>
         <div className="relative z-10 flex flex-col">
-          <CardContent className="flex-1">
+          <CardContent>
             {isLoading && agents.length === 0 ? (
               <div className="text-center py-16">
                 <RefreshCcw className={`h-16 w-16 mx-auto mb-6 animate-spin ${isDarkMode ? 'text-white/50' : 'text-slate-400'}`} />
@@ -257,7 +257,7 @@ export const GamifiedLeaderboard: React.FC = () => {
             ) : (
               <div 
                 style={{ gap: '4px', paddingTop: `${15 * scale}px`, paddingBottom: `${15 * scale}px` }} 
-                className="flex flex-col min-h-0"
+                className="flex flex-col"
               >
                 {/* Prerender all agents in DOM for smooth reordering when ranks change */}
                 {/* React will just reorder existing elements instead of creating new ones */}
