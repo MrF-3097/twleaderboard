@@ -163,6 +163,8 @@ export const useExternalLeaderboard = (
 
       // Update state only if component is still mounted
       if (isMountedRef.current) {
+        console.log(`[External API] Received ${data.data.agents?.length || 0} agents from API`)
+        console.log(`[External API] Agents data:`, data.data.agents?.map(a => ({ id: a.id, name: a.name, rank: a.rank })))
         setAgents(data.data.agents)
         setStats(data.data.stats)
         setLastUpdated(data.meta?.updated_at || new Date().toISOString())

@@ -461,6 +461,7 @@ export const useAgentLeaderboard = (
     }
 
     previousAgentsRef.current = combinedAgents
+    console.log(`[Agent Leaderboard] Setting ${combinedAgents.length} total agents (${actualAgentsSorted.length} from API + ${fallbackAgents.length} fallback)`)
     setAgents(combinedAgents)
 
     if (externalStats) {
