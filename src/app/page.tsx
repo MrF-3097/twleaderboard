@@ -37,7 +37,7 @@ function TVDisplayContent({ stats, agents }: { stats: any, agents: any }) {
   }, [])
 
   return (
-    <main className={`h-screen w-screen overflow-hidden transition-colors duration-500 ${
+    <main className={`h-screen w-screen transition-colors duration-500 ${
       isDarkMode ? 'bg-[#1F2933]' : 'bg-[#F8FAFC]'
     }`}>
       <div 
