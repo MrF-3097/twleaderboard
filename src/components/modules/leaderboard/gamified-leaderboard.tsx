@@ -121,7 +121,8 @@ export const GamifiedLeaderboard: React.FC = () => {
     }
   }, [])
   
-  // Calculate dynamic scaling based on visible agents (always 10) and actual viewport height
+  // Calculate dynamic scaling based on viewport height
+  // Scale based on 10 agents for consistent sizing, but render all agents
   const scale = useMemo(() => calculateScaling(AGENTS_VISIBLE, viewportHeight), [viewportHeight])
   
   const [podiumCycleKey, setPodiumCycleKey] = useState(0)
