@@ -32,7 +32,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents }) =
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Row 1: Clock */}
-      <div className="flex-shrink-0" style={{ height: '34%' }}>
+      <div className="flex-shrink-0" style={{ height: '34%', paddingTop: '100px' }}>
         <Clock />
       </div>
 
@@ -78,7 +78,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents }) =
       </div>
 
       {/* Row 3: Monthly Goal Progress */}
-      <div className="flex-shrink-0" style={{ height: '46%', marginTop: '60px', paddingTop: '40px'}}>
+      <div className="flex-shrink-0" style={{ height: '46%', marginTop: '80px', paddingTop: '60px'}}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
