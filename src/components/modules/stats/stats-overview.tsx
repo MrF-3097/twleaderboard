@@ -32,7 +32,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents }) =
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Row 1: Clock */}
-      <div className="flex-shrink-0" style={{ height: '34%', paddingTop: '100px' }}>
+      <div className="flex-shrink-0" style={{ height: '34%', paddingTop: '95px' }}>
         <Clock />
       </div>
 
