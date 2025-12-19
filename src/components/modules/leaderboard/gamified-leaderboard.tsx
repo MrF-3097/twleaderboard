@@ -259,9 +259,11 @@ export const GamifiedLeaderboard: React.FC = () => {
                 style={{ gap: '4px', paddingTop: `${15 * scale}px`, paddingBottom: `${15 * scale}px` }} 
                 className="flex flex-col"
               >
-                {/* Prerender all agents in DOM for smooth reordering when ranks change */}
-                {/* React will just reorder existing elements instead of creating new ones */}
-                      {agents.slice(0, 11).map((agent, index) => {
+                {/* Render first 11 agents - 11th will extend beyond viewport */}
+                {(() => {
+                  const agentsToRender = agents.slice(0, 11)
+                  console.log('[Leaderboard] Rendering agents:', agentsToRender.length, 'Total available:', agents.length)
+                  return agentsToRender.map((agent, index) => {
                   const rankChange = rankChanges.find((rc) => rc.agentId === agent.id)
                   const agentRank = agent.rank ?? index + 1
                   
@@ -282,7 +284,7 @@ export const GamifiedLeaderboard: React.FC = () => {
                       />
                     </div>
                   )
-                })}
+                })})()}
               </div>
             )}
           </CardContent>
