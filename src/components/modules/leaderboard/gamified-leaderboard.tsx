@@ -236,7 +236,7 @@ export const GamifiedLeaderboard: React.FC = () => {
       {/* Leaderboard Title */}
       <div className="text-center">
         <h2 className={`text-5xl font-bold ${textColor} tracking-wide`}>
-          Valoare Comision Lunar
+          Clasament Lunar
         </h2>
       </div>
       
