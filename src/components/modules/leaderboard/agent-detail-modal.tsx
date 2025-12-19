@@ -159,7 +159,7 @@ export const AgentDetailModal: React.FC<AgentDetailModalProps> = ({
               <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
                 <CardContent className="pt-6 text-center">
                   <div className="text-2xl font-bold mb-1">
-                    €{(agent.total_value / 1000000).toFixed(1)}M
+                    €{(agent.total_value / 1000000).toFixed(0)}M
                   </div>
                   <div className="text-sm opacity-80">Total Value</div>
                 </CardContent>

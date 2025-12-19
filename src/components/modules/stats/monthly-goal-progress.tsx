@@ -111,7 +111,7 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5 }}
                 >
-                  {progressPercentage.toFixed(1)}%
+                  {progressPercentage.toFixed(0)}%
                 </motion.span>
               </div>
               
@@ -128,14 +128,14 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                €{totalCommission.toLocaleString('ro-RO')}
+                €{totalCommission.toLocaleString('ro-RO', { maximumFractionDigits: 0 })}
               </motion.p>
             </div>
             
             <div className="flex flex-col items-center">
               <p className={textColorMuted}>Obiectiv</p>
               <p className="text-xl font-bold text-[#FFD700]">
-                €{MONTHLY_GOAL.toLocaleString('ro-RO')}
+                €{MONTHLY_GOAL.toLocaleString('ro-RO', { maximumFractionDigits: 0 })}
               </p>
             </div>
             
@@ -148,8 +148,8 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
                 transition={{ delay: 0.5 }}
               >
                 {progressPercentage >= 100 
-                  ? `+€${(totalCommission - MONTHLY_GOAL).toLocaleString('ro-RO')}`
-                  : `€${remaining.toLocaleString('ro-RO')}`
+                  ? `+€${(totalCommission - MONTHLY_GOAL).toLocaleString('ro-RO', { maximumFractionDigits: 0 })}`
+                  : `€${remaining.toLocaleString('ro-RO', { maximumFractionDigits: 0 })}`
                 }
               </motion.p>
             </div>

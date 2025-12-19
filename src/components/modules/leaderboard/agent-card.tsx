@@ -298,7 +298,7 @@ const AgentCardComponent: React.FC<AgentCardProps> = ({ agent, index, onClick, r
                 }`}
                 style={{ fontSize: `${Math.max(35.5904, 53.2816 * scale)}px` }}
               >
-                €{(agent.total_commission || agent.xp || 0).toLocaleString('ro-RO')}
+                €{(agent.total_commission || agent.xp || 0).toLocaleString('ro-RO', { maximumFractionDigits: 0 })}
               </div>
             </div>
           </div>

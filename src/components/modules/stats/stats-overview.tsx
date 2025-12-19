@@ -14,11 +14,11 @@ interface StatsOverviewProps {
 
 const formatCommission = (amount: number): string => {
   if (amount >= 1000000) {
-    return `€${(amount / 1000000).toFixed(1)}M`
+    return `€${(amount / 1000000).toFixed(0)}M`
   } else if (amount >= 1000) {
     return `€${(amount / 1000).toFixed(0)}k`
   }
-  return `€${amount.toLocaleString('ro-RO')}`
+  return `€${amount.toLocaleString('ro-RO', { maximumFractionDigits: 0 })}`
 }
 
 export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents }) => {
@@ -37,7 +37,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents }) =
       </div>
 
       {/* Row 2: Total Transactions and Total Commission */}
-      <div className="flex-shrink-0 flex gap-6" style={{ height: '20%', marginTop: '25px' }}>
+      <div className="flex-shrink-0 flex gap-6" style={{ height: '20%', marginTop: '20px' }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -78,7 +78,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents }) =
       </div>
 
       {/* Row 3: Monthly Goal Progress */}
-      <div className="flex-shrink-0" style={{ height: '46%', marginTop: '25px' }}>
+      <div className="flex-shrink-0" style={{ height: '46%', marginTop: '60px', paddingTop: '40px'}}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
