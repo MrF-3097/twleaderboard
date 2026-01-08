@@ -10,7 +10,7 @@ export const runtime = 'nodejs'
  */
 // Use proxy route first, fallback to direct API
 const PROXY_API_URL = '/api/leaderboard-proxy'
-const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_LEADERBOARD_API_URL || 'http://185.92.192.127:3001/api/leaderboard'
+const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_LEADERBOARD_API_URL || 'http://185.92.192.127:3000/api/leaderboard'
 const POLLING_INTERVAL = 1000 // Poll every 1 second for instant updates
 const MAX_RECONNECT_DELAY = 30000 // Max 30 seconds between reconnects
 

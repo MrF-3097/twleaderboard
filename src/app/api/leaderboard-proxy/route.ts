@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
  * Proxy route for external leaderboard API
  * This avoids CORS issues by fetching from the server side
  */
-const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_LEADERBOARD_API_URL || 'http://185.92.192.127:3001/api/leaderboard'
+const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_LEADERBOARD_API_URL || 'http://185.92.192.127:3000/api/leaderboard'
 
 export async function GET(request: NextRequest) {
   try {
