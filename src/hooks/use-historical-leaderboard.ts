@@ -15,8 +15,11 @@ interface UseHistoricalLeaderboardOptions {
 }
 
 /**
- * Hook to automatically save monthly leaderboard snapshots
- * Saves a snapshot at the end of each month or periodically
+ * Hook to automatically save monthly leaderboard snapshots to the server
+ * Saves a snapshot periodically to ensure data is backed up
+ * 
+ * Note: The dashboard API also auto-saves previous month snapshots,
+ * so this is mainly for keeping the current month's data up-to-date.
  */
 export const useHistoricalLeaderboard = (
   agents: Agent[],
@@ -27,6 +30,7 @@ export const useHistoricalLeaderboard = (
   const lastSavedMonthRef = useRef<string | null>(null)
   const agentsRef = useRef<Agent[]>([])
   const statsRef = useRef<AgentStats | null>(null)
+  const isSavingRef = useRef(false)
 
   // Keep refs updated
   useEffect(() => {
@@ -34,7 +38,7 @@ export const useHistoricalLeaderboard = (
     statsRef.current = stats
   }, [agents, stats])
 
-  // Save snapshot when agents/stats change
+  // Save snapshot when agents/stats change significantly
   useEffect(() => {
     if (!autoSave) return
     if (typeof window === 'undefined') return
@@ -50,10 +54,19 @@ export const useHistoricalLeaderboard = (
     const currentMonthKey = getCurrentMonthKey()
     
     // Save snapshot if we have agents and it's a different month than last saved
-    if (lastSavedMonthRef.current !== currentMonthKey) {
+    if (lastSavedMonthRef.current !== currentMonthKey && !isSavingRef.current) {
+      isSavingRef.current = true
       saveMonthlySnapshot(agents, stats)
-      lastSavedMonthRef.current = currentMonthKey
-      console.log(`[Historical Leaderboard] Auto-saved snapshot for ${currentMonthKey}`)
+        .then(() => {
+          lastSavedMonthRef.current = currentMonthKey
+          console.log(`[Historical Leaderboard] Auto-saved snapshot for ${currentMonthKey}`)
+        })
+        .catch((err) => {
+          console.error('[Historical Leaderboard] Error auto-saving:', err)
+        })
+        .finally(() => {
+          isSavingRef.current = false
+        })
     }
   }, [agents, stats, autoSave])
 
@@ -69,24 +82,28 @@ export const useHistoricalLeaderboard = (
       return `${year}-${String(month).padStart(2, '0')}`
     }
 
-    const saveSnapshot = () => {
+    const saveSnapshot = async () => {
       const currentMonthKey = getCurrentMonthKey()
       
-      // Save snapshot if we have agents and it's a different month than last saved
-      if (
-        agentsRef.current.length > 0 &&
-        lastSavedMonthRef.current !== currentMonthKey
-      ) {
-        saveMonthlySnapshot(agentsRef.current, statsRef.current)
-        lastSavedMonthRef.current = currentMonthKey
-        console.log(`[Historical Leaderboard] Auto-saved snapshot for ${currentMonthKey}`)
+      // Save snapshot if we have agents and not currently saving
+      if (agentsRef.current.length > 0 && !isSavingRef.current) {
+        isSavingRef.current = true
+        try {
+          await saveMonthlySnapshot(agentsRef.current, statsRef.current)
+          lastSavedMonthRef.current = currentMonthKey
+          console.log(`[Historical Leaderboard] Periodic save for ${currentMonthKey}`)
+        } catch (err) {
+          console.error('[Historical Leaderboard] Error in periodic save:', err)
+        } finally {
+          isSavingRef.current = false
+        }
       }
     }
 
-    // Set up interval to periodically check and save
+    // Set up interval to periodically save
     const intervalId = setInterval(saveSnapshot, saveInterval)
 
-    // Also save when the month changes (check every minute)
+    // Also check when the month changes (every minute)
     const monthCheckInterval = setInterval(() => {
       const currentMonthKey = getCurrentMonthKey()
       if (lastSavedMonthRef.current !== currentMonthKey) {
@@ -100,4 +117,3 @@ export const useHistoricalLeaderboard = (
     }
   }, [autoSave, saveInterval])
 }
-

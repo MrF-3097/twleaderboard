@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronLeft, ChevronRight, Save } from 'lucide-react'
@@ -13,6 +13,7 @@ import {
   getMonthNameRo,
   saveSnapshotForMonth,
   type HistoricalLeaderboardSnapshot,
+  type AvailableMonth,
 } from '@/lib/historical-leaderboard-storage'
 
 interface HistoricLeaderboardModalProps {
@@ -20,6 +21,22 @@ interface HistoricLeaderboardModalProps {
   onClose: () => void
   currentAgents?: Agent[] // Current live agents data
   currentStats?: AgentStats | null // Current live stats data
+}
+
+/**
+ * Keyboard event handler for buttons (TV remote compatibility)
+ * Triggers action on Enter or Space key
+ */
+const handleButtonKeyDown = (
+  event: React.KeyboardEvent,
+  action: () => void,
+  isDisabled: boolean
+) => {
+  if (isDisabled) return
+  if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+    event.preventDefault()
+    action()
+  }
 }
 
 const DEFAULT_SCREEN_HEIGHT = 1080
@@ -63,18 +80,22 @@ export const HistoricLeaderboardModal: React.FC<HistoricLeaderboardModalProps> =
   currentStats = null,
 }) => {
   const { isDarkMode } = useThemeContext()
-  const [availableMonths, setAvailableMonths] = useState<
-    Array<{ year: number; month: number; monthKey: string }>
-  >([])
+  const [availableMonths, setAvailableMonths] = useState<AvailableMonth[]>([])
   const [currentMonthIndex, setCurrentMonthIndex] = useState(0)
   const [currentSnapshot, setCurrentSnapshot] = useState<HistoricalLeaderboardSnapshot | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [viewportHeight, setViewportHeight] = useState(DEFAULT_SCREEN_HEIGHT)
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const [selectedSaveMonth, setSelectedSaveMonth] = useState<{ year: number; month: number }>({
     year: 2025,
     month: 12,
   })
+  
+  // Refs for button focus management (TV navigation)
+  const prevButtonRef = useRef<HTMLButtonElement>(null)
+  const nextButtonRef = useRef<HTMLButtonElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
 
   // Get viewport height
   useEffect(() => {
@@ -89,25 +110,71 @@ export const HistoricLeaderboardModal: React.FC<HistoricLeaderboardModalProps> =
     return () => window.removeEventListener('resize', updateViewportHeight)
   }, [])
 
+  // Global keyboard navigation for TV remotes
+  useEffect(() => {
+    if (!isOpen || typeof window === 'undefined') return
+
+    const handleGlobalKeyDown = (event: KeyboardEvent) => {
+      // Don't interfere with save dialog
+      if (saveDialogOpen) return
+
+      switch (event.key) {
+        case 'ArrowLeft':
+          event.preventDefault()
+          if (currentMonthIndex < availableMonths.length - 1) {
+            handlePreviousMonth()
+          }
+          break
+        case 'ArrowRight':
+          event.preventDefault()
+          if (currentMonthIndex > 0) {
+            handleNextMonth()
+          }
+          break
+        case 'Escape':
+          event.preventDefault()
+          onClose()
+          break
+        case 'Backspace':
+          // Some TV remotes use Backspace for back button
+          event.preventDefault()
+          onClose()
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleGlobalKeyDown)
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown)
+  }, [isOpen, saveDialogOpen, currentMonthIndex, availableMonths.length, onClose])
+
   // Load available months when modal opens
   useEffect(() => {
     if (isOpen) {
-      const months = getAvailableMonths()
-      setAvailableMonths(months)
-      
-      if (months.length > 0) {
-        // Start with the most recent month (index 0)
-        setCurrentMonthIndex(0)
-        loadSnapshotForMonth(months[0])
-      }
+      setIsLoading(true)
+      getAvailableMonths()
+        .then((months) => {
+          setAvailableMonths(months)
+          
+          if (months.length > 0) {
+            // Start with the most recent month (index 0)
+            setCurrentMonthIndex(0)
+            return loadSnapshotForMonthAsync(months[0])
+          }
+        })
+        .catch((err) => {
+          console.error('[Historic Leaderboard] Error loading available months:', err)
+        })
+        .finally(() => {
+          setIsLoading(false)
+        })
     }
   }, [isOpen])
 
-  // Load snapshot for a specific month
-  const loadSnapshotForMonth = (monthInfo: { year: number; month: number }) => {
+  // Load snapshot for a specific month (async)
+  const loadSnapshotForMonthAsync = async (monthInfo: { year: number; month: number }) => {
     setIsLoading(true)
     try {
-      const snapshot = loadMonthlySnapshot(monthInfo.year, monthInfo.month)
+      const snapshot = await loadMonthlySnapshot(monthInfo.year, monthInfo.month)
       setCurrentSnapshot(snapshot)
     } catch (err) {
       console.error('[Historic Leaderboard] Error loading snapshot:', err)
@@ -122,7 +189,7 @@ export const HistoricLeaderboardModal: React.FC<HistoricLeaderboardModalProps> =
     if (currentMonthIndex < availableMonths.length - 1) {
       const newIndex = currentMonthIndex + 1
       setCurrentMonthIndex(newIndex)
-      loadSnapshotForMonth(availableMonths[newIndex])
+      loadSnapshotForMonthAsync(availableMonths[newIndex])
     }
   }
 
@@ -131,41 +198,54 @@ export const HistoricLeaderboardModal: React.FC<HistoricLeaderboardModalProps> =
     if (currentMonthIndex > 0) {
       const newIndex = currentMonthIndex - 1
       setCurrentMonthIndex(newIndex)
-      loadSnapshotForMonth(availableMonths[newIndex])
+      loadSnapshotForMonthAsync(availableMonths[newIndex])
     }
   }
 
-  // Save current data as a specific month
-  const handleSaveAsMonth = () => {
+  // Save current data as a specific month (async)
+  const handleSaveAsMonth = async () => {
     if (currentAgents.length === 0) {
       alert('Nu există date curente pentru a salva')
       return
     }
 
-    saveSnapshotForMonth(
-      selectedSaveMonth.year,
-      selectedSaveMonth.month,
-      currentAgents,
-      currentStats
-    )
+    setIsSaving(true)
+    
+    try {
+      const success = await saveSnapshotForMonth(
+        selectedSaveMonth.year,
+        selectedSaveMonth.month,
+        currentAgents,
+        currentStats
+      )
 
-    // Refresh available months
-    const months = getAvailableMonths()
-    setAvailableMonths(months)
+      if (success) {
+        // Refresh available months
+        const months = await getAvailableMonths()
+        setAvailableMonths(months)
 
-    // Find and navigate to the newly saved month
-    const savedIndex = months.findIndex(
-      (m) => m.year === selectedSaveMonth.year && m.month === selectedSaveMonth.month
-    )
-    if (savedIndex !== -1) {
-      setCurrentMonthIndex(savedIndex)
-      loadSnapshotForMonth(months[savedIndex])
+        // Find and navigate to the newly saved month
+        const savedIndex = months.findIndex(
+          (m) => m.year === selectedSaveMonth.year && m.month === selectedSaveMonth.month
+        )
+        if (savedIndex !== -1) {
+          setCurrentMonthIndex(savedIndex)
+          await loadSnapshotForMonthAsync(months[savedIndex])
+        }
+
+        setSaveDialogOpen(false)
+        alert(
+          `Datele au fost salvate pentru ${getMonthNameRo(selectedSaveMonth.month)} ${selectedSaveMonth.year}`
+        )
+      } else {
+        alert('Eroare la salvarea datelor. Încercați din nou.')
+      }
+    } catch (err) {
+      console.error('[Historic Leaderboard] Error saving snapshot:', err)
+      alert('Eroare la salvarea datelor. Încercați din nou.')
+    } finally {
+      setIsSaving(false)
     }
-
-    setSaveDialogOpen(false)
-    alert(
-      `Datele au fost salvate pentru ${getMonthNameRo(selectedSaveMonth.month)} ${selectedSaveMonth.year}`
-    )
   }
 
   // Generate list of months to save (last 12 months)
@@ -391,19 +471,23 @@ export const HistoricLeaderboardModal: React.FC<HistoricLeaderboardModalProps> =
                     <div className="flex gap-4">
                       <button
                         onClick={() => setSaveDialogOpen(false)}
+                        disabled={isSaving}
                         className={`flex-1 py-3 rounded-lg border ${borderColor} ${textColor} transition-all ${
                           isDarkMode
                             ? 'hover:bg-white/10'
                             : 'hover:bg-slate-100'
-                        }`}
+                        } ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         Anulează
                       </button>
                       <button
                         onClick={handleSaveAsMonth}
-                        className="flex-1 py-3 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 transition-all"
+                        disabled={isSaving}
+                        className={`flex-1 py-3 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 transition-all ${
+                          isSaving ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                       >
-                        Salvează
+                        {isSaving ? 'Se salvează...' : 'Salvează'}
                       </button>
                     </div>
                   </motion.div>
