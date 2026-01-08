@@ -40,8 +40,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch from external API with timeout
+    // Increased timeout to 15s to account for REBS API delays
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
     
     let response: Response
     try {
@@ -55,12 +56,12 @@ export async function GET(request: NextRequest) {
     } catch (error) {
       clearTimeout(timeoutId)
       if (error instanceof Error && error.name === 'AbortError') {
-        console.error(`[Proxy] Request timeout after 10s: ${apiUrl}`)
+        console.error(`[Proxy] Request timeout after 15s: ${apiUrl}`)
         return NextResponse.json(
           {
             success: false,
-            error: 'Request timeout - external API did not respond within 10 seconds',
-            message: 'The dashboard API is taking too long to respond',
+            error: 'Request timeout - external API did not respond within 15 seconds',
+            message: 'The dashboard API is taking too long to respond. Check if the dashboard service is running and if REBS API is accessible.',
             endpoint: apiUrl,
           },
           { status: 504 } // Gateway Timeout
