@@ -77,6 +77,8 @@ function TVDisplayContent({ stats, agents }: { stats: any, agents: any }) {
       <HistoricLeaderboardModal
         isOpen={isHistoricModalOpen}
         onClose={() => setIsHistoricModalOpen(false)}
+        currentAgents={agents}
+        currentStats={stats}
       />
     </main>
   )

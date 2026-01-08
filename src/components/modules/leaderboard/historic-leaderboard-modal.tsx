@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Save } from 'lucide-react'
 import { useThemeContext } from '@/contexts/theme-context'
 import { AgentCard } from './agent-card'
 import type { Agent, AgentStats } from '@/types'
@@ -11,12 +11,15 @@ import {
   getAvailableMonths,
   loadMonthlySnapshot,
   getMonthNameRo,
+  saveSnapshotForMonth,
   type HistoricalLeaderboardSnapshot,
 } from '@/lib/historical-leaderboard-storage'
 
 interface HistoricLeaderboardModalProps {
   isOpen: boolean
   onClose: () => void
+  currentAgents?: Agent[] // Current live agents data
+  currentStats?: AgentStats | null // Current live stats data
 }
 
 const DEFAULT_SCREEN_HEIGHT = 1080
@@ -56,6 +59,8 @@ const calculateScaling = (agentCount: number, actualScreenHeight: number = DEFAU
 export const HistoricLeaderboardModal: React.FC<HistoricLeaderboardModalProps> = ({
   isOpen,
   onClose,
+  currentAgents = [],
+  currentStats = null,
 }) => {
   const { isDarkMode } = useThemeContext()
   const [availableMonths, setAvailableMonths] = useState<
@@ -65,6 +70,11 @@ export const HistoricLeaderboardModal: React.FC<HistoricLeaderboardModalProps> =
   const [currentSnapshot, setCurrentSnapshot] = useState<HistoricalLeaderboardSnapshot | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [viewportHeight, setViewportHeight] = useState(DEFAULT_SCREEN_HEIGHT)
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+  const [selectedSaveMonth, setSelectedSaveMonth] = useState<{ year: number; month: number }>({
+    year: 2025,
+    month: 12,
+  })
 
   // Get viewport height
   useEffect(() => {
@@ -124,6 +134,65 @@ export const HistoricLeaderboardModal: React.FC<HistoricLeaderboardModalProps> =
       loadSnapshotForMonth(availableMonths[newIndex])
     }
   }
+
+  // Save current data as a specific month
+  const handleSaveAsMonth = () => {
+    if (currentAgents.length === 0) {
+      alert('Nu există date curente pentru a salva')
+      return
+    }
+
+    saveSnapshotForMonth(
+      selectedSaveMonth.year,
+      selectedSaveMonth.month,
+      currentAgents,
+      currentStats
+    )
+
+    // Refresh available months
+    const months = getAvailableMonths()
+    setAvailableMonths(months)
+
+    // Find and navigate to the newly saved month
+    const savedIndex = months.findIndex(
+      (m) => m.year === selectedSaveMonth.year && m.month === selectedSaveMonth.month
+    )
+    if (savedIndex !== -1) {
+      setCurrentMonthIndex(savedIndex)
+      loadSnapshotForMonth(months[savedIndex])
+    }
+
+    setSaveDialogOpen(false)
+    alert(
+      `Datele au fost salvate pentru ${getMonthNameRo(selectedSaveMonth.month)} ${selectedSaveMonth.year}`
+    )
+  }
+
+  // Generate list of months to save (last 12 months)
+  const monthsToSave = useMemo(() => {
+    const result: Array<{ year: number; month: number; label: string }> = []
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1
+
+    for (let i = 0; i < 12; i++) {
+      let month = currentMonth - i
+      let year = currentYear
+
+      while (month <= 0) {
+        month += 12
+        year -= 1
+      }
+
+      result.push({
+        year,
+        month,
+        label: `${getMonthNameRo(month)} ${year}`,
+      })
+    }
+
+    return result
+  }, [])
 
   // Calculate scale for agent cards
   const scale = useMemo(() => {
@@ -244,10 +313,26 @@ export const HistoricLeaderboardModal: React.FC<HistoricLeaderboardModalProps> =
                 </button>
               </div>
 
+              {/* Save Button */}
+              {currentAgents.length > 0 && (
+                <button
+                  onClick={() => setSaveDialogOpen(true)}
+                  className={`ml-6 p-3 rounded-lg border ${borderColor} transition-all ${
+                    isDarkMode
+                      ? 'hover:bg-green-600/20 hover:border-green-400/50'
+                      : 'hover:bg-green-100 hover:border-green-400'
+                  }`}
+                  aria-label="Salvează ca lună istorică"
+                  title="Salvează datele curente ca snapshot istoric"
+                >
+                  <Save className={`h-6 w-6 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
+                </button>
+              )}
+
               {/* Close Button */}
               <button
                 onClick={onClose}
-                className={`ml-6 p-3 rounded-lg border ${borderColor} transition-all ${
+                className={`ml-4 p-3 rounded-lg border ${borderColor} transition-all ${
                   isDarkMode
                     ? 'hover:bg-white/10 hover:border-white/30'
                     : 'hover:bg-slate-100 hover:border-slate-400'
@@ -257,6 +342,74 @@ export const HistoricLeaderboardModal: React.FC<HistoricLeaderboardModalProps> =
                 <X className={`h-6 w-6 ${textColor}`} />
               </button>
             </div>
+
+            {/* Save Dialog */}
+            <AnimatePresence>
+              {saveDialogOpen && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50"
+                  onClick={() => setSaveDialogOpen(false)}
+                >
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <h3 className={`text-2xl font-bold ${textColor} mb-4`}>
+                      Salvează Snapshot Istoric
+                    </h3>
+                    <p className={`${textColorMuted} mb-6`}>
+                      Salvează datele curente ({currentAgents.length} agenți) ca snapshot pentru o lună specifică:
+                    </p>
+
+                    {/* Month Selector */}
+                    <select
+                      value={`${selectedSaveMonth.year}-${selectedSaveMonth.month}`}
+                      onChange={(e) => {
+                        const [year, month] = e.target.value.split('-').map(Number)
+                        setSelectedSaveMonth({ year, month })
+                      }}
+                      className={`w-full p-4 rounded-lg border ${borderColor} ${
+                        isDarkMode
+                          ? 'bg-slate-700 text-white'
+                          : 'bg-gray-50 text-slate-900'
+                      } text-lg mb-6`}
+                    >
+                      {monthsToSave.map((m) => (
+                        <option key={`${m.year}-${m.month}`} value={`${m.year}-${m.month}`}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Buttons */}
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => setSaveDialogOpen(false)}
+                        className={`flex-1 py-3 rounded-lg border ${borderColor} ${textColor} transition-all ${
+                          isDarkMode
+                            ? 'hover:bg-white/10'
+                            : 'hover:bg-slate-100'
+                        }`}
+                      >
+                        Anulează
+                      </button>
+                      <button
+                        onClick={handleSaveAsMonth}
+                        className="flex-1 py-3 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 transition-all"
+                      >
+                        Salvează
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>

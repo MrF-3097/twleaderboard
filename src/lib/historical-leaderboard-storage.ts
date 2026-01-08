@@ -36,19 +36,17 @@ const parseMonthKey = (key: string): { year: number; month: number } | null => {
 }
 
 /**
- * Save a leaderboard snapshot for the current month
+ * Save a leaderboard snapshot for a specific month
  */
-export const saveMonthlySnapshot = (
+export const saveSnapshotForMonth = (
+  year: number,
+  month: number,
   agents: Agent[],
   stats: AgentStats | null
 ): void => {
   if (typeof window === 'undefined') return
 
   try {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = now.getMonth() + 1 // JavaScript months are 0-indexed
-
     const snapshot: HistoricalLeaderboardSnapshot = {
       year,
       month,
@@ -67,31 +65,26 @@ export const saveMonthlySnapshot = (
     // Save back to localStorage
     localStorage.setItem(HISTORICAL_STORAGE_KEY, JSON.stringify(existingData))
     
-    console.log(`[Historical Leaderboard] Saved snapshot for ${monthKey}`)
+    console.log(`[Historical Leaderboard] Saved snapshot for ${monthKey} with ${agents.length} agents`)
   } catch (err) {
     console.error('[Historical Leaderboard] Error saving snapshot:', err)
-    // If storage is full, try to clean up old entries (keep last 12 months)
-    try {
-      cleanupOldSnapshots(12)
-      // Retry saving
-      const now = new Date()
-      const year = now.getFullYear()
-      const month = now.getMonth() + 1
-      const snapshot: HistoricalLeaderboardSnapshot = {
-        year,
-        month,
-        agents: [...agents],
-        stats: stats ? { ...stats } : null,
-        timestamp: Date.now(),
-      }
-      const existingData = loadAllHistoricalSnapshots()
-      const monthKey = getMonthKey(year, month)
-      existingData[monthKey] = snapshot
-      localStorage.setItem(HISTORICAL_STORAGE_KEY, JSON.stringify(existingData))
-    } catch (retryErr) {
-      console.error('[Historical Leaderboard] Failed to save after cleanup:', retryErr)
-    }
   }
+}
+
+/**
+ * Save a leaderboard snapshot for the current month
+ */
+export const saveMonthlySnapshot = (
+  agents: Agent[],
+  stats: AgentStats | null
+): void => {
+  if (typeof window === 'undefined') return
+
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth() + 1 // JavaScript months are 0-indexed
+
+  saveSnapshotForMonth(year, month, agents, stats)
 }
 
 /**
