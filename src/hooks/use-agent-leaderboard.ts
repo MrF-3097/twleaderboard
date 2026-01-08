@@ -414,9 +414,29 @@ export const useAgentLeaderboard = (
     )
 
     const fallbackAgents: Agent[] = []
-    // Only create fallback agents if we have REBS data loaded, or if we're still loading and have cached data
-    // This prevents creating "Agent necunoscut" placeholders when REBS data is still loading
-    if (actualAgentsSorted.length < MIN_VISIBLE_AGENTS && (rebsAgentsLoaded || rebsAgentsRef.current.length > 0)) {
+    
+    // If API returns 0 agents and we have REBS agents, use ALL REBS agents
+    // Otherwise, only fill up to MIN_VISIBLE_AGENTS if needed
+    const shouldUseAllRebsAgents = actualAgentsSorted.length === 0 && 
+                                     (rebsAgentsLoaded || rebsAgentsRef.current.length > 0) &&
+                                     rebsAgentsRef.current.length > 0
+    
+    if (shouldUseAllRebsAgents) {
+      // Use ALL REBS agents when API returns 0 agents
+      const rebsFallback = rebsAgentsRef.current
+        .filter(rebsAgent => {
+          const name = getRebsFullName(rebsAgent).toLowerCase().trim()
+          if (!name) return false
+          return !existingNameSet.has(name)
+        })
+        .sort((a, b) => getRebsFullName(a).localeCompare(getRebsFullName(b)))
+        .map((agent, index) => createFallbackAgentFromRebs(agent, index))
+      
+      fallbackAgents.push(...rebsFallback)
+      console.log(`[Agent Leaderboard] Using all ${rebsFallback.length} REBS agents as fallback (API returned 0 agents)`)
+    } else if (actualAgentsSorted.length < MIN_VISIBLE_AGENTS && (rebsAgentsLoaded || rebsAgentsRef.current.length > 0)) {
+      // Only create fallback agents if we have REBS data loaded, or if we're still loading and have cached data
+      // This prevents creating "Agent necunoscut" placeholders when REBS data is still loading
       const needed = MIN_VISIBLE_AGENTS - actualAgentsSorted.length
 
       // Only use REBS agents for fallback if we have them loaded
