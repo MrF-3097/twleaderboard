@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
     const queryParams = new URLSearchParams()
     if (since) queryParams.set('since', since)
     if (agent) queryParams.set('agent', agent)
-    if (limit) queryParams.set('limit', limit)
+    // Set a high limit if not provided to get all agents (dashboard API may default to 10)
+    queryParams.set('limit', limit || '1000')
     if (includeStats !== null) queryParams.set('include_stats', includeStats || 'true')
 
     const apiUrl = queryParams.toString()
