@@ -29,6 +29,9 @@ export async function GET(request: NextRequest) {
       ? `${EXTERNAL_API_URL}?${queryParams.toString()}`
       : EXTERNAL_API_URL
 
+    // Log the URL being requested for debugging
+    console.log(`[Proxy] Requesting dashboard API: ${apiUrl}`)
+
     // Get ETag from request headers
     const ifNoneMatch = request.headers.get('if-none-match')
 
