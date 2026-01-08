@@ -13,6 +13,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const since = searchParams.get('since')
+    const until = searchParams.get('until')
+    const allTime = searchParams.get('all_time')
     const agent = searchParams.get('agent')
     const limit = searchParams.get('limit')
     const includeStats = searchParams.get('include_stats')
@@ -20,6 +22,9 @@ export async function GET(request: NextRequest) {
     // Build query string for external API
     const queryParams = new URLSearchParams()
     if (since) queryParams.set('since', since)
+    if (until) queryParams.set('until', until)
+    // If all_time is requested, pass it through; otherwise default to all_time=true to get all agents
+    queryParams.set('all_time', allTime || 'true')
     if (agent) queryParams.set('agent', agent)
     // Set a high limit if not provided to get all agents (dashboard API may default to 10)
     queryParams.set('limit', limit || '1000')

@@ -94,6 +94,8 @@ export const useLeaderboardStream = (): UseLeaderboardStreamReturn => {
 
           // Immediate state updates - use flushSync for instant updates on TV
           // Batch all updates together for optimal performance
+          console.log(`[SSE] Received ${data.data.agents?.length || 0} agents from API`)
+          console.log(`[SSE] Agents:`, data.data.agents?.map(a => ({ id: a.id, name: a.name, rank: a.rank })))
           setAgents(data.data.agents)
           setStats(data.data.stats)
           setLastUpdated(data.meta?.updated_at || new Date().toISOString())
