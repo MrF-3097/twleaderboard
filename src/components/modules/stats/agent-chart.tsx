@@ -28,8 +28,11 @@ export const AgentChart: React.FC<AgentChartProps> = ({ agents }) => {
   const minCommission = Math.min(...sortedAgents.map(agent => agent.total_commission || 0), 0)
   const range = maxCommission - minCommission || 1
 
+  // Define point type for wave chart
+  type WavePoint = { x: number; y: number; commission: number; agent: Agent }
+
   // Create points for the wave (normalized to 0-100%)
-  const points = sortedAgents.map((agent, index) => {
+  const points: WavePoint[] = sortedAgents.map((agent, index) => {
     const commission = agent.total_commission || 0
     const normalized = ((commission - minCommission) / range) * 100
     const x = (index / (sortedAgents.length - 1)) * 100
@@ -37,7 +40,7 @@ export const AgentChart: React.FC<AgentChartProps> = ({ agents }) => {
   })
 
   // Create SVG path for the wave using smooth curves
-  const createWavePath = (points: typeof points, height: number) => {
+  const createWavePath = (points: WavePoint[], height: number) => {
     if (points.length === 0) return ''
     
     let path = `M 0 ${height} `

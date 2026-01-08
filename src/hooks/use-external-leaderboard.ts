@@ -215,8 +215,8 @@ export const useExternalLeaderboard = (
     setError(null)
     // Reset ETag to force fresh fetch
     lastETagRef.current = null
-    await fetchLeaderboard(false)
-  }, [fetchLeaderboard])
+    await fetchLeaderboardInternal(false)
+  }, [])
 
   /**
    * Set up polling interval
