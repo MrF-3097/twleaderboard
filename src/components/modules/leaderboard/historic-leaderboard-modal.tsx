@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useThemeContext } from '@/contexts/theme-context'
@@ -149,7 +150,12 @@ export const HistoricLeaderboardModal: React.FC<HistoricLeaderboardModalProps> =
   const agents = currentSnapshot?.agents || []
   const stats = currentSnapshot?.stats || null
 
-  return (
+  // Render modal in portal to ensure it's above everything
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
         <>
@@ -159,23 +165,35 @@ export const HistoricLeaderboardModal: React.FC<HistoricLeaderboardModalProps> =
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/80 z-50"
+            className="fixed inset-0 bg-black/80 z-[9998]"
             onClick={onClose}
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
           />
 
-          {/* Modal */}
+          {/* Modal - Full Screen */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className={`fixed inset-0 z-50 ${bgColor} flex flex-col overflow-hidden`}
+            className={`fixed inset-0 z-[9999] ${bgColor} flex flex-col overflow-hidden`}
             onClick={(e) => e.stopPropagation()}
+            style={{ 
+              position: 'fixed', 
+              top: 0, 
+              left: 0, 
+              right: 0, 
+              bottom: 0,
+              width: '100vw',
+              height: '100vh',
+              margin: 0,
+              padding: 0,
+            }}
           >
             {/* Header */}
             <div
-              className={`flex items-center justify-between px-8 py-6 border-b ${borderColor}`}
-              style={{ minHeight: '120px' }}
+              className={`flex items-center justify-between px-12 py-8 border-b ${borderColor} flex-shrink-0`}
+              style={{ minHeight: '140px' }}
             >
               <div className="flex items-center gap-6 flex-1">
                 {/* Previous Month Button */}
@@ -196,14 +214,14 @@ export const HistoricLeaderboardModal: React.FC<HistoricLeaderboardModalProps> =
 
                 {/* Month Display */}
                 <div className="flex-1 text-center">
-                  <h2 className={`text-4xl font-bold ${textColor} mb-2`}>
+                  <h2 className={`text-5xl font-bold ${textColor} mb-3`}>
                     Clasament Istoric
                   </h2>
-                  <p className={`text-2xl ${textColorMuted}`}>
+                  <p className={`text-3xl ${textColorMuted}`}>
                     {currentMonthDisplay}
                   </p>
                   {availableMonths.length > 0 && (
-                    <p className={`text-sm ${textColorMuted} mt-1`}>
+                    <p className={`text-lg ${textColorMuted} mt-2`}>
                       {currentMonthIndex + 1} / {availableMonths.length}
                     </p>
                   )}
@@ -241,19 +259,19 @@ export const HistoricLeaderboardModal: React.FC<HistoricLeaderboardModalProps> =
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
               {isLoading ? (
                 <div className="flex items-center justify-center h-full">
-                  <p className={`text-xl ${textColorMuted}`}>Se încarcă...</p>
+                  <p className={`text-2xl ${textColorMuted}`}>Se încarcă...</p>
                 </div>
               ) : !currentSnapshot || agents.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
-                  <p className={`text-xl ${textColorMuted}`}>
+                  <p className={`text-2xl ${textColorMuted}`}>
                     Nu există date disponibile pentru această lună
                   </p>
                 </div>
               ) : (
-                <div className="w-full max-w-7xl mx-auto py-8 px-6">
+                <div className="w-full max-w-[90%] mx-auto py-8 px-8">
                   {/* Stats Summary */}
                   {stats && (
                     <div
@@ -325,5 +343,7 @@ export const HistoricLeaderboardModal: React.FC<HistoricLeaderboardModalProps> =
       )}
     </AnimatePresence>
   )
+
+  return createPortal(modalContent, document.body)
 }
 
