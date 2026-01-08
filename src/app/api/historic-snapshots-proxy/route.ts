@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
  * This avoids CORS issues by fetching from the server side
  */
 const EXTERNAL_API_URL = process.env.NEXT_PUBLIC_LEADERBOARD_API_URL?.replace('/api/leaderboard', '/api/historic-snapshots') 
-  || 'http://185.92.192.127:3000/api/historic-snapshots'
+  || 'http://127.0.0.1:3000/api/historic-snapshots'
 
 /**
  * GET /api/historic-snapshots-proxy

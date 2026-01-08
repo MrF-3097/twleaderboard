@@ -18,12 +18,12 @@ const getApiUrl = (): string => {
   if (typeof window !== 'undefined') {
     return '/api/leaderboard-proxy'
   }
-  // Server-side: use direct API URL
-  return process.env.NEXT_PUBLIC_LEADERBOARD_API_URL || 'http://185.92.192.127:3000/api/leaderboard'
+  // Server-side: use direct API URL (use 127.0.0.1 instead of localhost to avoid IPv6 issues)
+  return process.env.NEXT_PUBLIC_LEADERBOARD_API_URL || 'http://127.0.0.1:3000/api/leaderboard'
 }
 
 const API_BASE_URL = getApiUrl()
-const FALLBACK_API_URL = process.env.NEXT_PUBLIC_LEADERBOARD_API_URL || 'http://185.92.192.127:3000/api/leaderboard'
+const FALLBACK_API_URL = process.env.NEXT_PUBLIC_LEADERBOARD_API_URL || 'http://127.0.0.1:3000/api/leaderboard'
 const POLLING_INTERVAL = 5000 // 5 seconds as recommended
 const RETRY_ATTEMPTS = 3
 const RETRY_BACKOFF_BASE_MS = 1000 // Base delay for exponential backoff
