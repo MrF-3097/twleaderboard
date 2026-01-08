@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
 
           // Add timeout to prevent hanging
           const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 8000) // 8 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), 12000) // 12 second timeout (increased to match proxy)
 
           let response: Response
           try {

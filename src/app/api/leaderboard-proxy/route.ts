@@ -39,12 +39,35 @@ export async function GET(request: NextRequest) {
       headers['If-None-Match'] = ifNoneMatch
     }
 
-    // Fetch from external API
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers,
-      cache: 'no-store',
-    })
+    // Fetch from external API with timeout
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    
+    let response: Response
+    try {
+      response = await fetch(apiUrl, {
+        method: 'GET',
+        headers,
+        cache: 'no-store',
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
+    } catch (error) {
+      clearTimeout(timeoutId)
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error(`[Proxy] Request timeout after 10s: ${apiUrl}`)
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Request timeout - external API did not respond within 10 seconds',
+            message: 'The dashboard API is taking too long to respond',
+            endpoint: apiUrl,
+          },
+          { status: 504 } // Gateway Timeout
+        )
+      }
+      throw error
+    }
 
     // Handle 304 Not Modified
     if (response.status === 304) {
