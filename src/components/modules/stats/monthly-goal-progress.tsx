@@ -2,19 +2,20 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Target } from 'lucide-react'
+import { Target, History } from 'lucide-react'
 import type { Agent } from '@/types'
 import { useThemeContext } from '@/contexts/theme-context'
 
 interface MonthlyGoalProgressProps {
   agents: Agent[]
+  onOpenHistoric?: () => void
 }
 
 const MONTHLY_GOAL = 30000 // 30,000 EUR
 const LOOP_DURATION_MS = 30000
 const REFILL_DELAY_MS = 2000
 
-export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents }) => {
+export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents, onOpenHistoric }) => {
   const { isDarkMode } = useThemeContext()
   
   // Calculate total commission from all agents
@@ -154,6 +155,24 @@ export const MonthlyGoalProgress: React.FC<MonthlyGoalProgressProps> = ({ agents
               </motion.p>
             </div>
           </div>
+
+          {/* Historic Leaderboard Button */}
+          {onOpenHistoric && (
+            <div className="mt-4 flex-shrink-0">
+              <button
+                onClick={onOpenHistoric}
+                className={`w-full py-3 px-4 rounded-lg border ${borderColor} transition-all flex items-center justify-center gap-2 ${
+                  isDarkMode
+                    ? 'hover:bg-white/10 hover:border-white/30'
+                    : 'hover:bg-slate-100 hover:border-slate-400'
+                }`}
+                aria-label="Vezi clasament istoric"
+              >
+                <History className={`h-5 w-5 ${iconColor}`} />
+                <span className={`font-medium ${textColor}`}>Clasament Istoric</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

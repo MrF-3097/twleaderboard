@@ -10,6 +10,7 @@ import { useThemeContext } from '@/contexts/theme-context'
 interface StatsOverviewProps {
   stats: AgentStats | null
   agents: Agent[]
+  onOpenHistoric?: () => void
 }
 
 const formatCommission = (amount: number): string => {
@@ -21,7 +22,7 @@ const formatCommission = (amount: number): string => {
   return `€${amount.toLocaleString('ro-RO', { maximumFractionDigits: 0 })}`
 }
 
-export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents }) => {
+export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents, onOpenHistoric }) => {
   const { isDarkMode } = useThemeContext()
   
   const textColor = isDarkMode ? 'text-white' : 'text-slate-900'
@@ -85,7 +86,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats, agents }) =
           transition={{ delay: 0.4 }}
           className="h-full"
         >
-          <MonthlyGoalProgress agents={agents} />
+          <MonthlyGoalProgress agents={agents} onOpenHistoric={onOpenHistoric} />
         </motion.div>
       </div>
     </div>

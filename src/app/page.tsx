@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { GamifiedLeaderboard } from '@/components/modules/leaderboard/gamified-leaderboard'
 import { StatsOverview } from '@/components/modules/stats/stats-overview'
+import { HistoricLeaderboardModal } from '@/components/modules/leaderboard/historic-leaderboard-modal'
 import { useAgentLeaderboard } from '@/hooks/use-agent-leaderboard'
+import { useHistoricalLeaderboard } from '@/hooks/use-historical-leaderboard'
 import { ThemeProvider, useThemeContext } from '@/contexts/theme-context'
 import { unlockAudio } from '@/lib/sounds'
 
@@ -11,6 +13,10 @@ const POLLING_INTERVAL = 5000
 
 function TVDisplayContent({ stats, agents }: { stats: any, agents: any }) {
   const { isDarkMode } = useThemeContext()
+  const [isHistoricModalOpen, setIsHistoricModalOpen] = useState(false)
+
+  // Auto-save monthly snapshots
+  useHistoricalLeaderboard(agents, stats, { autoSave: true })
 
   // Unlock audio on page load and first user interaction
   useEffect(() => {
@@ -54,7 +60,11 @@ function TVDisplayContent({ stats, agents }: { stats: any, agents: any }) {
       >
         {/* Column 1: Stats (2 rows) */}
         <div className="w-[30%] flex flex-col">
-          <StatsOverview stats={stats} agents={agents} />
+          <StatsOverview
+            stats={stats}
+            agents={agents}
+            onOpenHistoric={() => setIsHistoricModalOpen(true)}
+          />
         </div>
 
         {/* Column 2: Leaderboard */}
@@ -62,6 +72,12 @@ function TVDisplayContent({ stats, agents }: { stats: any, agents: any }) {
           <GamifiedLeaderboard />
         </div>
       </div>
+
+      {/* Historic Leaderboard Modal */}
+      <HistoricLeaderboardModal
+        isOpen={isHistoricModalOpen}
+        onClose={() => setIsHistoricModalOpen(false)}
+      />
     </main>
   )
 }
