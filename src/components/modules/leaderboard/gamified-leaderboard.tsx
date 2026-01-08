@@ -243,8 +243,8 @@ export const GamifiedLeaderboard: React.FC = () => {
       
       {/* Leaderboard */}
       <div className={`relative rounded-2xl ${bgColor} flex flex-col`}>
-        <div className="relative z-10 flex flex-col">
-          <CardContent>
+        <div className="relative z-10 flex flex-col h-full">
+          <CardContent className="h-full flex flex-col">
             {isLoading && agents.length === 0 ? (
               <div className="text-center py-16">
                 <RefreshCcw className={`h-16 w-16 mx-auto mb-6 animate-spin ${isDarkMode ? 'text-white/50' : 'text-slate-400'}`} />
@@ -257,10 +257,19 @@ export const GamifiedLeaderboard: React.FC = () => {
               </div>
             ) : (
               <div 
-                style={{ gap: '4px', paddingTop: `${15 * scale}px`, paddingBottom: `${15 * scale}px` }} 
-                className="flex flex-col"
+                style={{ 
+                  gap: '4px', 
+                  paddingTop: `${15 * scale}px`, 
+                  paddingBottom: `${15 * scale}px`,
+                  maxHeight: 'calc(100vh - 200px)',
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: isDarkMode ? 'rgba(255,255,255,0.3) transparent' : 'rgba(0,0,0,0.3) transparent',
+                }} 
+                className="flex flex-col leaderboard-scroll"
               >
-                {/* Render all agents - leaderboard extends to show all */}
+                {/* Render all agents - leaderboard is scrollable to show all */}
                 {(() => {
                   console.log('[Leaderboard] Rendering all agents:', agents.length)
                   return agents.map((agent, index) => {
